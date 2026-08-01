@@ -276,7 +276,7 @@
   box-shadow: 0 10px 24px -14px var(--sg-accent);
 }
 .sg-weapon[data-locked='true'] { opacity: 0.35; }
-.sg-weapon__hint { position: absolute; bottom: -2px; left: 50%; transform: translate(-50%, 100%); font-size: 10px; color: var(--sg-muted); letter-spacing: 2px; white-space: nowrap; }
+.sg-weapon__hint { position: absolute; top: -6px; left: 50%; transform: translate(-50%, -100%); font-size: 10px; color: var(--sg-muted); letter-spacing: 2px; white-space: nowrap; }
 
 .sg-modal {
   position: absolute;
