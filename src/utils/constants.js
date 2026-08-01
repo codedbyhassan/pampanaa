@@ -5,7 +5,7 @@
  */
 export const WORLD = { width: 960, height: 600 };
 
-export const MIN_WORLD = { width: 640, height: 420 };
+export const MIN_WORLD = { width: 320, height: 260 };
 
 export function setWorldSize(width, height) {
   WORLD.width = Math.max(MIN_WORLD.width, Math.round(width));
