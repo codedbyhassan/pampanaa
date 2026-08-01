@@ -256,7 +256,8 @@
 
 @keyframes sg-pop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
 
-.sg-weapons { position: absolute; bottom: clamp(10px, 2vw, 20px); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+.sg-weapons { position: absolute; /* anchor for the scroll hint */ bottom: clamp(10px, 2vw, 20px); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+.sg-weapons > .sg-weapon { position: relative; }
 .sg-weapon {
   background: rgba(6, 10, 20, 0.55);
   border: 1px solid var(--sg-border);
