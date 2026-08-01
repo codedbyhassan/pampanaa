@@ -1,23 +1,18 @@
 import Enemy from '../Enemy';
-import { vectorToPlayer } from '../EnemyAI';
 
+/** Tiny fast filler that packs the outer rows of a formation. */
 export class Swarmer extends Enemy {
   constructor(x, y, scale = 1) {
     super({
       type: 'Swarmer',
       x,
       y,
-      size: 16,
-      speed: 200,
+      size: 20,
+      speed: 240,
       health: 12 * scale,
-      contactDamage: 5 * scale,
+      contactDamage: 4 * scale,
       scoreValue: 6,
     });
-  }
-
-  update(dt, engine) {
-    super.update(dt);
-    this.move(dt, vectorToPlayer(this, engine.player));
   }
 }
 export default Swarmer;
