@@ -1,0 +1,18 @@
+:root {
+  --sg-bg: #070a12;
+  --sg-panel: #101728;
+  --sg-panel-2: #16203a;
+  --sg-border: #23304f;
+  --sg-text: #e8eeff;
+  --sg-muted: #8b9ac0;
+  --sg-accent: #5ee6a8;
+  --sg-accent-2: #7bd3ff;
+  --sg-danger: #ff5c7a;
+  --sg-warn: #ffd166;
+  --sg-radius: 10px;
+  --sg-space-1: 6px;
+  --sg-space-2: 12px;
+  --sg-space-3: 20px;
+  --sg-space-4: 32px;
+  --sg-font: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, monospace;
+}
