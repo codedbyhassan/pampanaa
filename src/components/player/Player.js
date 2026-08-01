@@ -74,18 +74,14 @@ export class Player {
     }
   }
 
-  draw(ctx) {
+  draw(ctx, time = 0) {
     if (!this.active) return;
-    if (this.hasBuff('shield')) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(120, 220, 255, 0.9)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-    drawShip(ctx, this.x, this.y, this.width, this.angle, this.color);
+    const thrust = Math.min(1, Math.hypot(this.vx, this.vy) / this.speed);
+    drawShip(ctx, this.x, this.y, this.width, this.angle, this.color, {
+      thrust,
+      time,
+      shielded: this.hasBuff('shield'),
+    });
   }
 }
 
