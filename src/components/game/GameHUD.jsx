@@ -15,16 +15,19 @@ export function GameHUD({ hud, mode, fps }) {
   return (
     <div className="sg-hud">
       <div className="sg-hud__top">
-        <div className="sg-stack" style={{ gap: 6 }}>
+        <div className="sg-hud__card sg-stack" style={{ gap: 4 }}>
           <div className="sg-hud__stat">
-            SCORE <b>{hud.score}</b>
+            Score <b>{hud.score}</b>
           </div>
           <div className="sg-hud__stat">
-            WAVE <b>{hud.wave}</b> {mode === 'endless' && <span className="sg-muted">ENDLESS</span>}
+            Wave <b>{hud.wave}</b> {mode === 'endless' && <span className="sg-muted">endless</span>}
           </div>
         </div>
-        <div className="sg-stack" style={{ gap: 6, alignItems: 'flex-end' }}>
-          <div className="sg-hud__stat">HP {Math.round(hud.health)}</div>
+
+        <div className="sg-hud__card sg-stack" style={{ gap: 6, alignItems: 'flex-end' }}>
+          <div className="sg-hud__stat">
+            Hull <b>{Math.round(hud.health)}</b>
+          </div>
           <PlayerHealthBar health={hud.health} />
           <div className="sg-hud__stat" style={{ color: WEAPON_META[hud.weapon]?.color }}>
             {WEAPON_META[hud.weapon]?.name}
@@ -36,7 +39,7 @@ export function GameHUD({ hud, mode, fps }) {
         <div className="sg-buffs">
           {activeBuffs.map(([key, value]) => (
             <div className="sg-buff" key={key}>
-              {BUFF_LABEL[key]} {Math.ceil(value)}s
+              {BUFF_LABEL[key]} · {Math.ceil(value)}s
             </div>
           ))}
         </div>

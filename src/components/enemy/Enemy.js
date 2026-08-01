@@ -3,6 +3,11 @@ import { drawEnemyShape } from '../../canvas/spriteDrawer';
 
 const CONTACT_COOLDOWN = 0.7;
 
+/**
+ * Formation-based enemy. Enemies never pursue the player: they fly in from
+ * off-screen, ease into a choreographed slot and then hold it while the whole
+ * squad sways together. Sub-classes only vary stats and their firing pattern.
+ */
 export class Enemy {
   constructor(config) {
     this.type = config.type;
@@ -19,7 +24,21 @@ export class Enemy {
     this.scoreValue = config.scoreValue;
     this.active = true;
     this.contactTimer = 0;
-    this.angle = 0;
+    this.angle = Math.PI / 2;
+    this.bob = Math.random() * Math.PI * 2;
+
+    // Formation state
+    this.slot = null;
+    this.mode = 'free';
+    this.entryDelay = 0;
+    this.fireInterval = config.fireInterval ?? 0;
+    this.fireTimer = (config.fireInterval ?? 0) * (0.4 + Math.random());
+  }
+
+  assignSlot(slot, entryDelay = 0) {
+    this.slot = slot;
+    this.mode = 'entering';
+    this.entryDelay = entryDelay;
   }
 
   canContact() {
@@ -43,29 +62,82 @@ export class Enemy {
     this.active = false;
   }
 
-  move(dt, dir) {
-    this.vx = dir.x * this.speed;
-    this.vy = dir.y * this.speed;
-    this.x += this.vx * dt;
-    this.y += this.vy * dt;
-    this.x = Math.max(-60, Math.min(WORLD.width + 60, this.x));
-    this.y = Math.max(-60, Math.min(WORLD.height + 60, this.y));
-    if (dir.x !== 0 || dir.y !== 0) this.angle = Math.atan2(dir.y, dir.x);
+  /** Moves toward an absolute point with easing; returns true once arrived. */
+  seek(dt, tx, ty, speedMul = 1) {
+    const dx = tx - this.x;
+    const dy = ty - this.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 1.5) {
+      this.x = tx;
+      this.y = ty;
+      return true;
+    }
+    const step = Math.min(dist, this.speed * speedMul * dt);
+    this.x += (dx / dist) * step;
+    this.y += (dy / dist) * step;
+    return dist < 4;
   }
 
-  update(dt) {
+  update(dt, engine) {
     if (this.contactTimer > 0) this.contactTimer -= dt;
+    this.bob += dt;
+
+    if (this.mode === 'entering' || this.mode === 'locked') {
+      if (this.entryDelay > 0) {
+        this.entryDelay -= dt;
+      } else {
+        const target = engine.formation.slotPosition(this.slot);
+        const arrived = this.seek(dt, target.x, target.y, this.mode === 'entering' ? 1.4 : 3);
+        if (arrived) this.mode = 'locked';
+      }
+    } else {
+      // Free-floating remnants (e.g. splitter children) drift gently downward.
+      this.y += 70 * dt;
+      this.x += Math.sin(this.bob * 2) * 30 * dt;
+      if (this.y > WORLD.height + 80) this.deactivate();
+    }
+
+    if (this.mode === 'locked' && this.fireInterval > 0) {
+      this.fireTimer -= dt * engine.fireRateMul;
+      if (this.fireTimer <= 0) {
+        this.fireTimer = this.fireInterval * (0.75 + Math.random() * 0.5);
+        this.shoot(engine);
+      }
+    }
+  }
+
+  /** Default: unarmed. */
+  // eslint-disable-next-line no-unused-vars
+  shoot(engine) {}
+
+  /** Downward shot with a gentle lead toward the player's column. */
+  fireAtPlayer(engine, speed = 300, damage = 8, size = 9) {
+    const dx = engine.player.x - this.x;
+    const angle = Math.PI / 2 + Math.max(-0.55, Math.min(0.55, dx / 900));
+    engine.spawnProjectile({
+      x: this.x,
+      y: this.y + this.height / 2,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      width: size,
+      height: size,
+      damage,
+      color: engine.palette.enemyProjectile,
+      source: 'enemy',
+      life: 6,
+    });
   }
 
   draw(ctx, palette) {
     if (!this.active) return;
-    drawEnemyShape(ctx, this.type, this.x, this.y, this.width, palette[this.type], this.angle);
+    const wobble = Math.sin(this.bob * 2.2) * 0.12;
+    drawEnemyShape(ctx, this.type, this.x, this.y, this.width, palette[this.type], wobble);
     if (this.health < this.maxHealth && this.type !== 'Boss') {
       const w = this.width;
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(this.x - w / 2, this.y - this.height / 2 - 8, w, 4);
+      ctx.fillRect(this.x - w / 2, this.y - this.height / 2 - 9, w, 4);
       ctx.fillStyle = '#6ee7a0';
-      ctx.fillRect(this.x - w / 2, this.y - this.height / 2 - 8, w * (this.health / this.maxHealth), 4);
+      ctx.fillRect(this.x - w / 2, this.y - this.height / 2 - 9, w * (this.health / this.maxHealth), 4);
     }
   }
 
@@ -76,6 +148,7 @@ export class Enemy {
       y: Math.round(this.y),
       health: this.health,
       maxHealth: this.maxHealth,
+      slot: this.slot,
       isSplit: this.isSplit || false,
     };
   }

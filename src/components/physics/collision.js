@@ -22,8 +22,10 @@ export function resolveCollisions(engine) {
   const player = engine.player;
   if (!player.active) return;
 
-  // Rebuild the spatial index from active enemies only.
+  // The arena resizes with the viewport, so re-fit the spatial index bounds.
   tree.clear();
+  tree.bounds.width = WORLD.width;
+  tree.bounds.height = WORLD.height;
   for (const enemy of engine.enemies) if (enemy.active) tree.insert(enemy);
 
   // Player projectiles vs enemies (quadtree-narrowed candidates).

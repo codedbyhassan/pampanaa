@@ -1,7 +1,7 @@
 import Player from '../components/player/Player';
 import Projectile from '../components/weapons/Projectile';
 import { createWeapons, WEAPON_ORDER } from '../components/weapons/weaponTypes';
-import EnemySpawner, { createEnemy, randomEdgePosition } from '../components/enemy/EnemySpawner';
+import FormationManager, { createEnemy } from '../components/enemy/FormationManager';
 import Boss from '../components/enemy/enemyTypes/Boss';
 import ParticleSystem from '../components/effects/ParticleSystem';
 import ScreenShake from '../components/effects/ScreenShake';
@@ -44,14 +44,13 @@ export class GameEngine {
     this.pickups = new PickupSystem();
     this.shake = new ScreenShake();
     this.shake.enabled = !settings.reducedMotion;
-    this.spawner = new EnemySpawner(this);
+    this.formation = new FormationManager(this);
 
     this.score = 0;
     this.wave = 1;
-    this.waveKills = 0;
     this.status = 'playing';
-    this.spawningPaused = false;
-    this.waveBannerTimer = 0;
+    this.waveBannerTimer = 1.4;
+    this.waveStarted = false;
     this.time = 0;
     this.playTime = 0;
     this.boss = null;
@@ -74,8 +73,12 @@ export class GameEngine {
   }
 
   get enemyStatScale() {
-    const waveScale = this.waveConfig.statScale || 1;
-    return this.difficultyMods.statMul * waveScale;
+    return this.difficultyMods.statMul * (this.waveConfig.statScale || 1);
+  }
+
+  /** Global multiplier applied to every enemy's firing cadence. */
+  get fireRateMul() {
+    return (this.waveConfig.fireRateMul || 1) * this.difficultyMods.fireMul;
   }
 
   get theme() {
@@ -91,9 +94,19 @@ export class GameEngine {
   }
 
   selectWeapon(key) {
-    if (!this.weapons[key] || !this.isUnlocked(key)) return;
+    if (!this.weapons[key] || !this.isUnlocked(key) || key === this.currentWeaponKey) return;
     this.currentWeaponKey = key;
+    this.sound.play('unlock');
     this.sync({ weapon: key });
+  }
+
+  /** Scroll-wheel / gamepad style cycling through unlocked weapons. */
+  cycleWeapon(direction) {
+    const list = WEAPON_ORDER.filter((k) => this.isUnlocked(k));
+    if (list.length < 2) return;
+    const index = list.indexOf(this.currentWeaponKey);
+    const next = list[(index + (direction > 0 ? 1 : -1) + list.length) % list.length];
+    this.selectWeapon(next);
   }
 
   sync(partial) {
@@ -127,13 +140,29 @@ export class GameEngine {
     p.spawn(config);
   }
 
-  startBossWave() {
-    const boss = new Boss(WORLD.width / 2, -80, this.difficultyMods.statMul, this.wave);
-    this.enemies.push(boss);
-    this.boss = boss;
-    this.sync({
-      boss: { name: boss.name, health: boss.health, maxHealth: boss.maxHealth },
-    });
+  /** Keeps entities inside the arena after the viewport (and world) resizes. */
+  handleResize() {
+    this.player.x = Math.min(this.player.x, WORLD.width - this.player.width / 2);
+    this.player.y = Math.min(this.player.y, WORLD.height - this.player.height / 2);
+  }
+
+  startWave() {
+    this.waveStarted = true;
+    this.enemies = this.enemies.filter((e) => e.active && e.mode === 'free');
+    if (this.isBossWave) {
+      const boss = new Boss(WORLD.width / 2, -120, this.difficultyMods.statMul, this.wave);
+      this.enemies.push(boss);
+      this.boss = boss;
+      this.sync({ boss: { name: boss.name, health: boss.health, maxHealth: boss.maxHealth } });
+      return;
+    }
+    this.enemies.push(...this.formation.spawnWave(this.waveConfig, this.enemyStatScale));
+  }
+
+  get squadRemaining() {
+    let n = 0;
+    for (const e of this.enemies) if (e.active && e.mode !== 'free') n++;
+    return n;
   }
 
   damageEnemy(enemy, amount, weaponKey) {
@@ -150,7 +179,7 @@ export class GameEngine {
 
     enemy.deactivate();
     const isBoss = enemy.type === 'Boss';
-    this.particles.burst(enemy.x, enemy.y, this.palette[enemy.type], isBoss ? 40 : 8, isBoss ? 320 : 190);
+    this.particles.burst(enemy.x, enemy.y, this.palette[enemy.type], isBoss ? 40 : 10, isBoss ? 320 : 200);
     this.sound.play('explosion');
 
     const mult = this.player.hasBuff('scoreMultiplier') ? 2 : 1;
@@ -166,23 +195,24 @@ export class GameEngine {
       this.boss = null;
       this.sync({ boss: null });
       this.emit('bossDefeated', { wave: this.wave });
-      this.pickups.spawn(enemy.x, enemy.y, PICKUP_KEYS[Math.floor(Math.random() * PICKUP_KEYS.length)]);
+      for (let i = 0; i < 3; i++) {
+        this.pickups.spawn(
+          enemy.x + (i - 1) * 40,
+          enemy.y,
+          PICKUP_KEYS[Math.floor(Math.random() * PICKUP_KEYS.length)],
+        );
+      }
       this.advanceWave();
       return;
     }
 
-    if (Math.random() < 0.12) this.pickups.spawn(enemy.x, enemy.y);
-
-    if (!this.isBossWave) {
-      this.waveKills += 1;
-      if (this.waveKills >= this.waveConfig.killsToAdvance) this.advanceWave();
-    }
+    if (Math.random() < 0.16) this.pickups.spawn(enemy.x, enemy.y);
+    if (this.squadRemaining === 0) this.advanceWave();
   }
 
   advanceWave() {
     this.wave += 1;
-    this.waveKills = 0;
-    this.spawningPaused = true;
+    this.waveStarted = false;
     this.waveBannerTimer = 2;
     this.sound.play('waveComplete');
 
@@ -217,6 +247,7 @@ export class GameEngine {
   collectPickup(pickup) {
     pickup.active = false;
     PICKUP_TYPES[pickup.type].apply(this.player);
+    this.particles.burst(pickup.x, pickup.y, PICKUP_TYPES[pickup.type].color, 8, 140);
     this.sound.play('pickup');
     this.sync({ health: this.player.health, buffs: { ...this.player.activeBuffs } });
   }
@@ -236,34 +267,29 @@ export class GameEngine {
     if (this.status !== 'playing') return;
     this.time += dt;
     this.playTime += dt;
+    this.formation.update(dt);
 
     // 1. Input → player
     this.player.update(dt, this.input);
     for (const key of Object.keys(this.weapons)) this.weapons[key].update(dt);
     if (this.input.firing && this.player.active) {
       const aim = this.input.aim;
-      const angle = aim ? Math.atan2(aim.y - this.player.y, aim.x - this.player.x) : this.player.angle;
+      const angle = aim ? Math.atan2(aim.y - this.player.y, aim.x - this.player.x) : -Math.PI / 2;
       this.currentWeapon.tryFire(this, this.player, angle);
     }
 
-    // 2. Wave pacing
+    // 2. Wave pacing — the next squad launches once the banner clears.
     if (this.waveBannerTimer > 0) {
       this.waveBannerTimer -= dt;
-      if (this.waveBannerTimer <= 0) {
-        this.spawningPaused = false;
-        this.sync({ waveBanner: false });
-        if (this.isBossWave && !this.boss) this.startBossWave();
-      }
-    }
-    if (this.isBossWave && !this.boss && !this.spawningPaused && this.waveBannerTimer <= 0) {
-      this.startBossWave();
+      if (this.waveBannerTimer <= 0) this.sync({ waveBanner: false });
+    } else if (!this.waveStarted) {
+      this.startWave();
     }
 
     // 3. Entities
-    this.spawner.update(dt);
     for (const enemy of this.enemies) if (enemy.active) enemy.update(dt, this);
     this.projectiles.forEachActive((p) => p.update(dt, this));
-    this.pickups.update(dt);
+    this.pickups.update(dt, this.player);
     this.particles.update(dt);
     this.damageNumbers.update(dt);
     this.shake.update(dt);
@@ -272,9 +298,8 @@ export class GameEngine {
     resolveCollisions(this);
 
     // 5. Cleanup
-    if (this.enemies.length > 40) this.enemies = this.enemies.filter((e) => e.active);
+    if (this.enemies.length > 60) this.enemies = this.enemies.filter((e) => e.active);
 
-    // Buff HUD sync only when a buff crosses a whole-second boundary.
     const secs = Math.ceil(Math.max(...Object.values(this.player.activeBuffs)));
     if (secs !== this._lastBuffSec) {
       this._lastBuffSec = secs;
@@ -292,7 +317,7 @@ export class GameEngine {
     this.pickups.draw(ctx, this.time);
     for (const enemy of this.enemies) if (enemy.active) enemy.draw(ctx, this.palette);
     this.projectiles.forEachActive((p) => p.draw(ctx));
-    this.player.draw(ctx);
+    this.player.draw(ctx, this.time);
     this.particles.draw(ctx);
     this.damageNumbers.draw(ctx);
 
@@ -313,7 +338,6 @@ export class GameEngine {
     return {
       score: this.score,
       wave: this.wave,
-      waveKills: this.waveKills,
       mode: this.mode,
       weapon: this.currentWeaponKey,
       player: {
@@ -321,7 +345,9 @@ export class GameEngine {
         y: Math.round(this.player.y),
         health: this.player.health,
       },
-      enemies: this.enemies.filter((e) => e.active && e.type !== 'Boss').map((e) => e.snapshot()),
+      enemies: this.enemies
+        .filter((e) => e.active && e.type !== 'Boss')
+        .map((e) => e.snapshot()),
     };
   }
 
@@ -329,9 +355,8 @@ export class GameEngine {
     this.score = snapshot.score || 0;
     this.wave = snapshot.wave || 1;
     this.startingWave = this.wave;
-    this.waveKills = snapshot.waveKills || 0;
     this.player.x = snapshot.player?.x ?? WORLD.width / 2;
-    this.player.y = snapshot.player?.y ?? WORLD.height / 2;
+    this.player.y = snapshot.player?.y ?? WORLD.height * 0.78;
     this.player.health = snapshot.player?.health ?? this.player.maxHealth;
     if (snapshot.weapon && this.isUnlocked(snapshot.weapon)) this.currentWeaponKey = snapshot.weapon;
     this.enemies = (snapshot.enemies || []).map((e) => {
@@ -339,8 +364,11 @@ export class GameEngine {
       enemy.maxHealth = e.maxHealth ?? enemy.maxHealth;
       enemy.health = e.health ?? enemy.health;
       if (e.isSplit) enemy.isSplit = true;
+      if (e.slot) enemy.assignSlot(e.slot, 0);
       return enemy;
     });
+    this.waveStarted = this.enemies.length > 0;
+    this.waveBannerTimer = this.waveStarted ? 0 : 1.2;
     this.sync({
       score: this.score,
       wave: this.wave,
@@ -350,5 +378,4 @@ export class GameEngine {
   }
 }
 
-export { randomEdgePosition };
 export default GameEngine;

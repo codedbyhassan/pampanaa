@@ -1,5 +1,4 @@
 import Enemy from '../Enemy';
-import { vectorToPlayer } from '../EnemyAI';
 
 export class Splitter extends Enemy {
   constructor(x, y, scale = 1, isSplit = false) {
@@ -7,33 +6,34 @@ export class Splitter extends Enemy {
       type: 'Splitter',
       x,
       y,
-      size: isSplit ? 18 : 32,
-      speed: isSplit ? 150 : 105,
-      health: (isSplit ? 25 : 60) * scale,
-      contactDamage: (isSplit ? 6 : 12) * scale,
+      size: isSplit ? 20 : 36,
+      speed: isSplit ? 170 : 165,
+      health: (isSplit ? 20 : 55) * scale,
+      contactDamage: (isSplit ? 5 : 10) * scale,
       scoreValue: isSplit ? 8 : 20,
+      fireInterval: isSplit ? 0 : 4.5,
     });
     this.isSplit = isSplit;
     this.scale = scale;
+    this.damageScale = scale;
   }
 
-  update(dt, engine) {
-    super.update(dt);
-    this.move(dt, vectorToPlayer(this, engine.player));
+  shoot(engine) {
+    this.fireAtPlayer(engine, 240, 6 * this.damageScale, 8);
   }
 
-  /** Split instances never split again — prevents an infinite chain. */
+  /**
+   * Children inherit the parent's slot so the formation stays intact; the last
+   * one to die simply leaves a gap. Split instances never split again.
+   */
   onDeath(engine) {
     if (this.isSplit) return;
-    for (let i = 0; i < 2; i++) {
-      const child = new Splitter(
-        this.x + (i === 0 ? -16 : 16),
-        this.y + (i === 0 ? -10 : 10),
-        this.scale,
-        true,
-      );
+    const offsets = [-0.06, 0.06];
+    offsets.forEach((dx, i) => {
+      const child = new Splitter(this.x + i * 30 - 15, this.y, this.scale, true);
+      if (this.slot) child.assignSlot({ ...this.slot, ox: this.slot.ox + dx }, 0);
       engine.enemies.push(child);
-    }
+    });
   }
 }
 export default Splitter;

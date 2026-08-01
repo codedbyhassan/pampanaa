@@ -53,15 +53,25 @@ function Shell() {
   );
 }
 
+/** Applies the selected interface skin to the app root. */
+function ThemedRoot({ children }) {
+  const { settings } = useGame();
+  return (
+    <div className="sg-root" data-ui-theme={settings.uiTheme || 'nebula'}>
+      {children}
+    </div>
+  );
+}
+
 export function App() {
   return (
-    <div className="sg-root">
-      <GameProvider>
-        <AudioProvider>
+    <GameProvider>
+      <AudioProvider>
+        <ThemedRoot>
           <Shell />
-        </AudioProvider>
-      </GameProvider>
-    </div>
+        </ThemedRoot>
+      </AudioProvider>
+    </GameProvider>
   );
 }
 
