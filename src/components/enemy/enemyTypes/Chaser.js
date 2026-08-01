@@ -1,23 +1,18 @@
 import Enemy from '../Enemy';
-import { vectorToPlayer } from '../EnemyAI';
 
+/** Front-line drone. Holds formation, no weapon — pure body blocker. */
 export class Chaser extends Enemy {
   constructor(x, y, scale = 1) {
     super({
       type: 'Chaser',
       x,
       y,
-      size: 26,
-      speed: 115,
-      health: 40 * scale,
-      contactDamage: 10 * scale,
+      size: 30,
+      speed: 190,
+      health: 34 * scale,
+      contactDamage: 8 * scale,
       scoreValue: 10,
     });
-  }
-
-  update(dt, engine) {
-    super.update(dt);
-    this.move(dt, vectorToPlayer(this, engine.player));
   }
 }
 export default Chaser;
