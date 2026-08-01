@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS = {
   controlScheme: 'auto',
   colorblind: false,
   reducedMotion: false,
+  uiTheme: 'nebula',
   keymap: { ...DEFAULT_KEYMAP },
   hasSeenOnboarding: false,
 };

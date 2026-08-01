@@ -19,6 +19,7 @@ export function WeaponSelector({ current, unlocked }) {
           </div>
         );
       })}
+      <span className="sg-weapon__hint">scroll to switch</span>
     </div>
   );
 }
