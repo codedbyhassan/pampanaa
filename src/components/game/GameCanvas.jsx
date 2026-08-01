@@ -33,6 +33,8 @@ export function GameCanvas({
         onTogglePause();
         return;
       }
+      if (code === 'KeyQ') return engine.cycleWeapon(-1);
+      if (code === 'KeyE') return engine.cycleWeapon(1);
       const index = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(code);
       if (index >= 0) engine.selectWeapon(WEAPON_ORDER[index]);
     },
@@ -62,7 +64,7 @@ export function GameCanvas({
           firing: kb.firing || t.firing || mouseDownRef.current,
         };
       }
-      input.aim = scheme === 'keyboard' || scheme === 'gamepad' ? aimRef.current : aimRef.current;
+      input.aim = aimRef.current;
       engine.setInput(input);
 
       engine.update(dt);
@@ -86,6 +88,7 @@ export function GameCanvas({
       callbacks: { onSync: syncFromEngine, onEvent: onEngineEvent },
     });
     engineRef.current = engine;
+    engine.handleResize();
     if (resumeSnapshot) engine.restore(resumeSnapshot);
     syncFromEngine({
       status: 'playing',
@@ -102,6 +105,35 @@ export function GameCanvas({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep the arena locked to the viewport without ever overflowing it.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => {
+      ctxRef.current = setupCanvas(canvas);
+      engineRef.current?.handleResize();
+      if (ctxRef.current) engineRef.current?.draw(ctxRef.current, 0);
+    });
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [engineRef]);
+
+  // Scroll wheel cycles weapons. React's onWheel is passive, so bind natively.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+    let cooldown = 0;
+    const onWheel = (e) => {
+      e.preventDefault();
+      const now = performance.now();
+      if (now - cooldown < 120) return;
+      cooldown = now;
+      engineRef.current?.cycleWeapon(e.deltaY > 0 ? 1 : -1);
+    };
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', onWheel);
+  }, [engineRef]);
 
   useEffect(() => {
     if (paused) stop();

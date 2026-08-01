@@ -1,35 +1,28 @@
-import { useEffect, useState } from 'react';
 import GameContainer from '../components/game/GameContainer';
-import { loadAssets } from '../canvas/assetLoader';
 import { useGame } from '../contexts/GameContext';
 
 export function GamePage({ mode, resumeSnapshot, onQuit }) {
   const { settings, saveSettings } = useGame();
-  const [loaded, setLoaded] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(!settings.hasSeenOnboarding);
 
-  useEffect(() => {
-    loadAssets().then(() => setLoaded(true));
-  }, []);
-
-  if (!loaded) return <div className="sg-panel sg-subtitle">Loading…</div>;
-
-  if (showOnboarding) {
+  if (!settings.hasSeenOnboarding) {
     return (
       <div className="sg-panel sg-stack">
         <h2 className="sg-h2">How to play</h2>
+        <ul className="sg-list">
+          <li><span>Move</span><b>WASD / arrows</b></li>
+          <li><span>Aim &amp; fire</span><b>Mouse or Space</b></li>
+          <li><span>Switch weapon</span><b>Scroll wheel · 1–5 · Q/E</b></li>
+          <li><span>Pause</span><b>Escape</b></li>
+        </ul>
         <p className="sg-muted" style={{ margin: 0, lineHeight: 1.7 }}>
-          Move with WASD or arrow keys. Aim with the mouse and fire with click or Space.
-          Switch weapons with keys 1–5. Press Escape to pause.
+          Enemies arrive in choreographed formations and hold their lanes — clear the
+          whole squad to advance. Power-ups drift down to you, so stay under them.
         </p>
         <button
           className="sg-btn sg-btn--primary"
-          onClick={() => {
-            saveSettings({ hasSeenOnboarding: true });
-            setShowOnboarding(false);
-          }}
+          onClick={() => saveSettings({ hasSeenOnboarding: true })}
         >
-          Got it
+          Launch
         </button>
       </div>
     );
