@@ -1,18 +1,73 @@
 :root {
-  --sg-bg: #070a12;
-  --sg-panel: #101728;
-  --sg-panel-2: #16203a;
-  --sg-border: #23304f;
-  --sg-text: #e8eeff;
-  --sg-muted: #8b9ac0;
-  --sg-accent: #5ee6a8;
-  --sg-accent-2: #7bd3ff;
-  --sg-danger: #ff5c7a;
-  --sg-warn: #ffd166;
-  --sg-radius: 10px;
+  --sg-radius: 14px;
   --sg-space-1: 6px;
   --sg-space-2: 12px;
   --sg-space-3: 20px;
   --sg-space-4: 32px;
-  --sg-font: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, monospace;
+  --sg-font: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --sg-font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, monospace;
+
+  /* Nebula (default) */
+  --sg-bg: #060912;
+  --sg-bg-glow-1: #16305c;
+  --sg-bg-glow-2: #0d2a2a;
+  --sg-panel: rgba(20, 28, 48, 0.72);
+  --sg-panel-2: rgba(30, 42, 70, 0.85);
+  --sg-border: rgba(126, 162, 226, 0.22);
+  --sg-text: #eaf1ff;
+  --sg-muted: #94a6cc;
+  --sg-accent: #5ee6a8;
+  --sg-accent-ink: #04231a;
+  --sg-accent-2: #7bd3ff;
+  --sg-danger: #ff5c7a;
+  --sg-warn: #ffd166;
+}
+
+[data-ui-theme='sunset'] {
+  --sg-bg: #150a10;
+  --sg-bg-glow-1: #5c2038;
+  --sg-bg-glow-2: #6b3410;
+  --sg-panel: rgba(46, 24, 32, 0.74);
+  --sg-panel-2: rgba(66, 33, 42, 0.88);
+  --sg-border: rgba(255, 168, 130, 0.24);
+  --sg-text: #fff1e8;
+  --sg-muted: #d3a595;
+  --sg-accent: #ff8a5c;
+  --sg-accent-ink: #2b0f06;
+  --sg-accent-2: #ffc46b;
+  --sg-danger: #ff5470;
+  --sg-warn: #ffd166;
+}
+
+[data-ui-theme='arcade'] {
+  --sg-bg: #0a0a06;
+  --sg-bg-glow-1: #4a3c00;
+  --sg-bg-glow-2: #123c1c;
+  --sg-panel: rgba(28, 28, 18, 0.78);
+  --sg-panel-2: rgba(44, 44, 26, 0.9);
+  --sg-border: rgba(255, 213, 74, 0.28);
+  --sg-text: #fdf7dc;
+  --sg-muted: #bdb183;
+  --sg-accent: #ffd54a;
+  --sg-accent-ink: #241d00;
+  --sg-accent-2: #8bff6b;
+  --sg-danger: #ff5c5c;
+  --sg-warn: #ff9f4a;
+  --sg-font: var(--sg-font-mono);
+}
+
+[data-ui-theme='frost'] {
+  --sg-bg: #05101a;
+  --sg-bg-glow-1: #0d3f63;
+  --sg-bg-glow-2: #103a52;
+  --sg-panel: rgba(16, 34, 52, 0.74);
+  --sg-panel-2: rgba(24, 50, 76, 0.88);
+  --sg-border: rgba(150, 214, 255, 0.24);
+  --sg-text: #eaf7ff;
+  --sg-muted: #8fb6d4;
+  --sg-accent: #7bd3ff;
+  --sg-accent-ink: #04202f;
+  --sg-accent-2: #c0f2ff;
+  --sg-danger: #ff6b8a;
+  --sg-warn: #ffe08a;
 }
