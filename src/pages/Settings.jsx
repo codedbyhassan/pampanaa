@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { useAudio } from '../contexts/AudioContext';
-import { DEFAULT_KEYMAP } from '../utils/constants';
+import { DEFAULT_KEYMAP, UI_THEMES, UI_THEME_KEYS } from '../utils/constants';
 
 const BINDINGS = [
   ['up', 'Move up'],
@@ -30,6 +30,26 @@ export function Settings({ onBack }) {
   return (
     <div className="sg-panel">
       <h2 className="sg-h2">Settings</h2>
+
+      <div className="sg-field">
+        <span className="sg-label">Interface theme</span>
+        <div className="sg-themes">
+          {UI_THEME_KEYS.map((key) => (
+            <button
+              key={key}
+              className="sg-theme"
+              data-active={(settings.uiTheme || 'nebula') === key}
+              onClick={() => saveSettings({ uiTheme: key })}
+            >
+              <span
+                className="sg-theme__dot"
+                style={{ background: UI_THEMES[key].swatch, color: UI_THEMES[key].swatch }}
+              />
+              {UI_THEMES[key].label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="sg-field">
         <label className="sg-label" htmlFor="vol">Volume · {Math.round(volume * 100)}%</label>
@@ -108,6 +128,10 @@ export function Settings({ onBack }) {
               </button>
             </li>
           ))}
+          <li>
+            <span>Switch weapon</span>
+            <b>Scroll · 1–5 · Q/E</b>
+          </li>
         </ul>
       </div>
 
