@@ -8,7 +8,7 @@ export class Player {
 
   reset(skin = 'default') {
     this.x = WORLD.width / 2;
-    this.y = WORLD.height / 2;
+    this.y = WORLD.height * 0.78;
     this.vx = 0;
     this.vy = 0;
     this.width = PLAYER.width;
