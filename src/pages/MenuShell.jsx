@@ -7,6 +7,8 @@ import Settings from './Settings';
 import Achievements from './Achievements';
 import Stats from './Stats';
 import LevelSelect from './LevelSelect';
+import Credits from './Credits';
+import Presets from './Presets';
 
 /**
  * AAA-style front end: a persistent left sidebar drives the whole menu, the
@@ -26,13 +28,8 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
 
   const resume = async () => {
     if (!hasSave || busy) return;
-    setBusy(true);
-    const save = await loadLatestSave();
-    setBusy(false);
-    if (save) {
-      resumeAudio();
-      onContinue(save);
-    }
+    // Open presets menu instead of auto-loading
+    setSection('presets');
   };
 
   const NAV = [
@@ -49,6 +46,7 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
     { id: 'achievements', label: 'Achievements' },
     { id: 'stats', label: 'Career' },
     { id: 'settings', label: 'Settings' },
+    { id: 'credits', label: 'Credits' },
   ];
 
   const select = (item) => {
@@ -97,7 +95,6 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
         {section === 'home' && (
           <section className="sg-hero">
             <img src="/logo.png" alt="Pampanaa" className="sg-hero__logo" />
-            <h1 className="sg-hero__title">Pampanaa</h1>
             <p className="sg-hero__tag">
               Hold the outer lanes against choreographed enemy formations, escalate your
               arsenal, and outlast the capital-class bosses.
@@ -138,6 +135,13 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
         {section === 'achievements' && <Achievements onBack={() => setSection('home')} />}
         {section === 'stats' && <Stats onBack={() => setSection('home')} />}
         {section === 'settings' && <Settings onBack={() => setSection('home')} />}
+        {section === 'credits' && <Credits onBack={() => setSection('home')} />}
+        {section === 'presets' && (
+          <Presets
+            onContinue={onContinue}
+            onClose={() => setSection('home')}
+          />
+        )}
       </main>
     </div>
   );
