@@ -14,6 +14,7 @@ import { ObjectPool } from '../utils/objectPool';
 import {
   WORLD,
   PROJECTILE_POOL_SIZE,
+  PLAYER,
   difficultyMods,
   PALETTES,
   getWaveConfig,
