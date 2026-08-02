@@ -111,3 +111,16 @@ export function randomPickupType() {
   }
   return 'health';
 }
+
+// Boss pickups: only the best amplifiers
+const BOSS_PICKUPS = ['multishotAmp', 'damageAmp', 'fireAmp', 'pierceAmp', 'autoLock'];
+
+export function randomBossPickup(wave) {
+  // Wave 1-30: exclude high-tier pickups
+  // Wave 30-50: autoLock available
+  // Wave 50+: all pickups
+  let available = BOSS_PICKUPS;
+  if (wave < 30) available = ['damageAmp', 'fireAmp', 'pierceAmp'];
+  else if (wave < 50) available = ['multishotAmp', 'damageAmp', 'fireAmp', 'autoLock'];
+  return available[Math.floor(Math.random() * available.length)];
+}

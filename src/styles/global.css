@@ -686,6 +686,15 @@ body::-webkit-scrollbar,
 }
 @keyframes sg-drift { from { transform: translateY(0); } to { transform: translateY(-6%); } }
 
+.sg-splash__logo {
+  position: absolute;
+  top: 40px;
+  width: 120px;
+  height: auto;
+  opacity: 0.9;
+  animation: sg-fade 0.7s ease;
+}
+
 .sg-splash__inner {
   position: relative;
   max-width: 660px;
@@ -842,6 +851,12 @@ body::-webkit-scrollbar,
 }
 
 .sg-hero { max-width: 620px; animation: sg-rise 0.4s ease; }
+.sg-hero__logo {
+  width: 140px;
+  height: auto;
+  margin-bottom: var(--sg-space-4);
+  opacity: 0.95;
+}
 .sg-hero__badge {
   display: inline-block;
   font-size: 10px;

@@ -153,12 +153,12 @@ export function difficultyMods(level = 4) {
   return {
     level: l,
     label: DIFFICULTY_LABELS[l],
-    statMul: 0.55 + t * 1.0, // enemy health / damage
-    fireMul: 0.45 + t * 1.25, // projectile frequency
-    swayMul: 0.6 + t * 0.9, // formation speed
-    entryMul: 0.75 + t * 0.6, // fly-in speed
-    densityMul: 0.7 + t * 0.6, // squad size
-    pickupMul: 1.5 - t * 0.7, // generosity of drops
+    statMul: 0.55 + t * 0.75, // enemy health / damage (more generous at high difficulty)
+    fireMul: 0.45 + t * 1.0, // projectile frequency (smoother curve)
+    swayMul: 0.6 + t * 0.7, // formation speed (less aggressive)
+    entryMul: 0.75 + t * 0.5, // fly-in speed
+    densityMul: 0.7 + t * 0.5, // squad size (fewer enemies at high difficulty)
+    pickupMul: 1.2 - t * 0.3, // generosity of drops (still good at high difficulty)
   };
 }
 

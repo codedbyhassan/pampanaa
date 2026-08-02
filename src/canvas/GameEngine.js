@@ -8,7 +8,7 @@ import ParticleSystem from '../components/effects/ParticleSystem';
 import ScreenShake from '../components/effects/ScreenShake';
 import DamageNumbers from '../components/effects/DamageNumbers';
 import PickupSystem from '../components/pickups/Pickup';
-import { PICKUP_TYPES, randomPickupType } from '../components/pickups/pickupTypes';
+import { PICKUP_TYPES, randomPickupType, randomBossPickup } from '../components/pickups/pickupTypes';
 import { resolveCollisions } from '../components/physics/collision';
 import { ObjectPool } from '../utils/objectPool';
 import {
@@ -255,7 +255,7 @@ export class GameEngine {
         this.pickups.spawn(
           enemy.x + (i - 1) * 40,
           enemy.y,
-          randomPickupType(),
+          randomBossPickup(this.wave),
         );
       }
       this.advanceWave();

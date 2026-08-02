@@ -96,7 +96,7 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
 
         {section === 'home' && (
           <section className="sg-hero">
-            <div className="sg-hero__badge">Campaign ready</div>
+            <img src="/logo.png" alt="Pampanaa" className="sg-hero__logo" />
             <h1 className="sg-hero__title">Pampanaa</h1>
             <p className="sg-hero__tag">
               Hold the outer lanes against choreographed enemy formations, escalate your
