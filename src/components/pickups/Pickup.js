@@ -6,7 +6,7 @@ import {
   PICKUP_MAGNET_RADIUS,
   WORLD,
 } from '../../utils/constants';
-import { PICKUP_TYPES, PICKUP_KEYS } from './pickupTypes';
+import { PICKUP_TYPES, randomPickupType } from './pickupTypes';
 
 function makePickup() {
   return { active: false, x: 0, y: 0, vx: 0, vy: 0, width: 26, height: 26, type: 'health', life: 0 };
@@ -28,7 +28,7 @@ export class PickupSystem {
     p.y = y;
     p.vx = (Math.random() - 0.5) * 60;
     p.vy = PICKUP_FALL_SPEED * 0.5;
-    p.type = type || PICKUP_KEYS[Math.floor(Math.random() * PICKUP_KEYS.length)];
+    p.type = type || randomPickupType();
     p.life = 14;
   }
 
