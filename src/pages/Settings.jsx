@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { useAudio } from '../contexts/AudioContext';
-import { DEFAULT_KEYMAP, UI_THEMES, UI_THEME_KEYS } from '../utils/constants';
+import {
+  DEFAULT_KEYMAP,
+  UI_THEMES,
+  UI_THEME_KEYS,
+  SHIP_DESIGNS,
+  SHIP_DESIGN_KEYS,
+  DIFFICULTY_MIN,
+  DIFFICULTY_MAX,
+  difficultyMods,
+} from '../utils/constants';
+import soundManager from '../components/audio/SoundManager';
 
 const BINDINGS = [
   ['up', 'Move up'],
@@ -66,16 +76,84 @@ export function Settings({ onBack }) {
       </div>
 
       <div className="sg-field">
-        <span className="sg-label">Difficulty</span>
+        <label className="sg-label" htmlFor="diff">
+          Difficulty · {settings.difficultyLevel ?? 4} ·{' '}
+          {difficultyMods(settings.difficultyLevel ?? 4).label}
+        </label>
+        <input
+          id="diff"
+          className="sg-slider"
+          type="range"
+          min={DIFFICULTY_MIN}
+          max={DIFFICULTY_MAX}
+          step="1"
+          value={settings.difficultyLevel ?? 4}
+          onChange={(e) => saveSettings({ difficultyLevel: Number(e.target.value) })}
+        />
+        <span className="sg-muted">
+          Scales enemy toughness, squad size, formation speed and how often they shoot.
+        </span>
+      </div>
+
+      <div className="sg-field">
+        <span className="sg-label">Audio</span>
         <div className="sg-toggle-group">
-          {['easy', 'normal', 'hard'].map((d) => (
+          <button
+            className="sg-toggle"
+            data-active={settings.sfxEnabled !== false}
+            onClick={() => {
+              const on = settings.sfxEnabled === false;
+              soundManager.setSfxEnabled(on);
+              saveSettings({ sfxEnabled: on });
+            }}
+          >
+            Sound effects
+          </button>
+          <button
+            className="sg-toggle"
+            data-active={settings.musicEnabled !== false}
+            onClick={() => {
+              const on = settings.musicEnabled === false;
+              soundManager.setMusicEnabled(on);
+              if (on) soundManager.startMusic('space');
+              saveSettings({ musicEnabled: on });
+            }}
+          >
+            Music
+          </button>
+        </div>
+      </div>
+
+      <div className="sg-field">
+        <label className="sg-label" htmlFor="mvol">
+          Music volume · {Math.round((settings.musicVolume ?? 0.35) * 100)}%
+        </label>
+        <input
+          id="mvol"
+          className="sg-slider"
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={settings.musicVolume ?? 0.35}
+          onChange={(e) => {
+            soundManager.setMusicVolume(Number(e.target.value));
+            saveSettings({ musicVolume: Number(e.target.value) });
+          }}
+        />
+      </div>
+
+      <div className="sg-field">
+        <span className="sg-label">Ship design</span>
+        <div className="sg-toggle-group">
+          {SHIP_DESIGN_KEYS.map((key) => (
             <button
-              key={d}
+              key={key}
               className="sg-toggle"
-              data-active={settings.difficulty === d}
-              onClick={() => saveSettings({ difficulty: d })}
+              data-active={(settings.shipDesign || 'interceptor') === key}
+              onClick={() => saveSettings({ shipDesign: key })}
             >
-              {d}
+              {SHIP_DESIGNS[key].label}
             </button>
           ))}
         </div>
