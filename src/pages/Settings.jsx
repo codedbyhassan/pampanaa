@@ -8,6 +8,8 @@ import {
   difficultyMods,
   SHIP_DESIGNS,
   SHIP_DESIGN_KEYS,
+  UI_THEMES,
+  UI_THEME_KEYS,
 } from '../utils/constants';
 import { THEMES, THEME_GROUPS } from '../canvas/backgroundThemes';
 import soundManager from '../components/audio/SoundManager';
