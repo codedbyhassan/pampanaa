@@ -1,5 +1,5 @@
-import { WORLD } from '../../utils/constants';
-import { drawBossShape } from '../../canvas/spriteDrawer';
+import { WORLD } from '../../../utils/constants';
+import { drawBossShape } from '../../../canvas/spriteDrawer';
 
 /**
  * Named thinker-bosses. Each is a stationary-lane duel: the boss telegraphs an
