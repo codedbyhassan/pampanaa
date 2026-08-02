@@ -5,7 +5,6 @@ import { DEFAULT_KEYMAP } from '../utils/constants';
 export const DEFAULT_SETTINGS = {
   key: 'main',
   volume: 0.5,
-  difficulty: 'normal',
   difficultyLevel: 4,
   musicEnabled: true,
   sfxEnabled: true,

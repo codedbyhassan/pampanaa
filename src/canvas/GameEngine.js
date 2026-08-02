@@ -64,6 +64,8 @@ export class GameEngine {
     this.fps = 0;
     this._fpsAcc = 0;
     this._fpsFrames = 0;
+    this._lastBossHealth = null;
+    this._lastBuffSec = 0;
     this.startingWave = 1;
     if (startWave > 1) {
       this.wave = startWave;
@@ -347,6 +349,15 @@ export class GameEngine {
     if (secs !== this._lastBuffSec) {
       this._lastBuffSec = secs;
       this.sync({ buffs: { ...this.player.activeBuffs } });
+    }
+
+    // Sync boss health every frame to keep HUD responsive.
+    if (this.boss) {
+      const bossPrev = this._lastBossHealth;
+      if (!bossPrev || bossPrev !== this.boss.health) {
+        this._lastBossHealth = this.boss.health;
+        this.syncBoss();
+      }
     }
   }
 

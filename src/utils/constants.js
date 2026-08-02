@@ -207,6 +207,14 @@ export const DEFAULT_KEYMAP = {
   fire: 'Space',
 };
 
+/** Achievement thresholds — pulled into constants to eliminate magic numbers. */
+export const ACHIEVEMENT_THRESHOLDS = {
+  WAVE_5: 5,
+  WAVE_10: 10,
+  HARD_DIFFICULTY: 7,
+  CENTURY_KILLS: 100,
+};
+
 export const WEAPON_UNLOCK_WAVE = {
   blaster: 0,
   shotgun: 2,

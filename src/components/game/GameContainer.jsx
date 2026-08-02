@@ -11,6 +11,7 @@ import { addScore } from '../../database/scores';
 import { saveGame, clearSave } from '../../database/saves';
 import { ACHIEVEMENTS } from '../../utils/achievementDefs';
 import { recordWaveCleared } from '../../database/progress';
+import { ACHIEVEMENT_THRESHOLDS } from '../../utils/constants';
 
 export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
   const { hud, settings, progress, saveProgress, tryUnlockAchievement, syncFromEngine, setHasSave } = useGame();
@@ -61,16 +62,18 @@ export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
       if (name === 'kill') {
         const total = (progress.totalEnemiesDefeated || 0) + 1;
         if (total === 1) unlockById('first_blood');
-        if (total >= 100) unlockById('century');
+        if (total >= ACHIEVEMENT_THRESHOLDS.CENTURY_KILLS) unlockById('century');
         // Batched persistence: progress written on discrete milestones only.
-        if (total % 10 === 0 || total === 1) saveProgress({ totalEnemiesDefeated: total });
-        else progress.totalEnemiesDefeated = total;
+        // Always persist through React state to ensure HUD stays in sync.
+        if (total % 10 === 0 || total === 1) {
+          await saveProgress({ totalEnemiesDefeated: total });
+        }
       }
       if (name === 'bossDefeated') unlockById('first_boss');
       if (name === 'waveAdvance') {
         const wave = payload.wave;
-        if (wave >= 5) unlockById('wave_5');
-        if (wave >= 10 && settings.difficulty === 'hard') unlockById('hard_wave_10');
+        if (wave >= ACHIEVEMENT_THRESHOLDS.WAVE_5) unlockById('wave_5');
+        if (wave >= ACHIEVEMENT_THRESHOLDS.WAVE_10 && settings.difficultyLevel >= ACHIEVEMENT_THRESHOLDS.HARD_DIFFICULTY) unlockById('hard_wave_10');
         const patch = { unlockedWeapons: [...engine.unlockedWeapons] };
         if (wave > (progress.highestWaveReached || 0)) patch.highestWaveReached = wave;
         await saveProgress(patch);
