@@ -200,9 +200,17 @@ export class Enemy {
       // Horizontal curtain of slow rounds the player has to slip through.
       case 'wall5': {
         for (let i = -2; i <= 2; i++) {
-          this.fireAngle(engine, Math.PI / 2, 200, dmg * 0.6, 8);
-          const last = engine.lastProjectile;
-          if (last) last.x = this.x + i * this.width * 0.55;
+          engine.spawnProjectile({
+            x: this.x + i * this.width * 0.55,
+            y: this.y + this.height * 0.4,
+            vx: 0,
+            vy: 200,
+            width: 8,
+            height: 8,
+            damage: dmg * 0.6,
+            owner: 'enemy',
+            color: this.color,
+          });
         }
         return undefined;
       }
