@@ -19,8 +19,8 @@ export class Player {
     this.active = true;
     this.angle = -Math.PI / 2;
     this.skin = skin;
-    this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0, autoLock: 0 };
-    this.amps = { damage: 0, fire: 0, pierce: 0 };
+    this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0, autoLock: 0, multishot: 0 };
+    this.amps = { damage: 0, fire: 0, pierce: 0, multishot: 0 };
     this.design = 'interceptor';
   }
 
@@ -39,6 +39,15 @@ export class Player {
 
   get fireRateMul() {
     return 1 + this.amps.fire * 0.15;
+  }
+
+  /**
+   * Multiplier pickups multiply how bullets are fired: every permanent stack
+   * adds a barrel, and the timed multi-shot buff doubles the whole spread.
+   */
+  get shotMultiplier() {
+    const stacks = Math.min(5, this.amps.multishot || 0);
+    return (1 + stacks) * (this.hasBuff('multishot') ? 2 : 1);
   }
 
   hasBuff(name) {
