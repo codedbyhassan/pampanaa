@@ -172,6 +172,7 @@ export const SHIP_DESIGNS = {
 export const SHIP_DESIGN_KEYS = Object.keys(SHIP_DESIGNS);
 
 export const SHIP_COLORS = {
+  default: '#5ee6a8',
   aurora: '#5ee6a8',
   ice: '#7bd3ff',
   gold: '#ffd54a',
@@ -179,6 +180,9 @@ export const SHIP_COLORS = {
   violet: '#c9a2ff',
   ember: '#ff8a5c',
 };
+
+/** Selectable interface skins — applied as data-ui-theme on the app root. */
+export const SKINS = SHIP_COLORS;
 
 /** Selectable interface skins — applied as data-ui-theme on the app root. */
 export const UI_THEMES = {

@@ -19,11 +19,26 @@ export class Player {
     this.active = true;
     this.angle = -Math.PI / 2;
     this.skin = skin;
-    this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0 };
+    this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0, autoLock: 0 };
+    this.amps = { damage: 0, fire: 0, pierce: 0 };
+    this.design = 'interceptor';
   }
 
   get color() {
     return SKINS[this.skin] || SKINS.default;
+  }
+
+  addAmp(kind) {
+    this.amps[kind] = (this.amps[kind] || 0) + 1;
+  }
+
+  /** Stacking amplifier multipliers — every pickup makes bullets hit harder. */
+  get damageMul() {
+    return 1 + this.amps.damage * 0.2;
+  }
+
+  get fireRateMul() {
+    return 1 + this.amps.fire * 0.15;
   }
 
   hasBuff(name) {
@@ -80,7 +95,9 @@ export class Player {
     drawShip(ctx, this.x, this.y, this.width, this.angle, this.color, {
       thrust,
       time,
+      design: this.design,
       shielded: this.hasBuff('shield'),
+      autoLock: this.hasBuff('autoLock'),
     });
   }
 }
