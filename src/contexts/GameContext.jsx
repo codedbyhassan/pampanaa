@@ -3,11 +3,18 @@ import { DEFAULT_SETTINGS, getSettings, updateSettings } from '../database/setti
 import { DEFAULT_PROGRESS, getProgress, updateProgress } from '../database/progress';
 import { loadLatestSave } from '../database/saves';
 import { getUnlockedAchievements, unlockAchievement } from '../database/achievements';
+import {
+  getActiveProfileName,
+  signIn as signInProfile,
+  signOut as signOutProfile,
+  touchProfile,
+} from '../database/profiles';
 import soundManager from '../components/audio/SoundManager';
 
 const GameContext = createContext(null);
 
 export function GameProvider({ children }) {
+  const [profile, setProfile] = useState(null);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [progress, setProgress] = useState(DEFAULT_PROGRESS);
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
@@ -30,23 +37,48 @@ export function GameProvider({ children }) {
   const statusRef = useRef('idle');
 
   const refreshAll = useCallback(async () => {
+    const name = getActiveProfileName();
     const [s, p, a, save] = await Promise.all([
       getSettings(),
       getProgress(),
       getUnlockedAchievements(),
       loadLatestSave(),
     ]);
+    setProfile(name);
     setSettings(s);
     setProgress(p);
     setUnlockedAchievements(a);
     setHasSave(!!save);
     soundManager.setVolume(s.volume);
+    soundManager.setSfxEnabled?.(s.sfxEnabled !== false);
+    soundManager.setMusicEnabled?.(s.musicEnabled !== false);
+    soundManager.setMusicVolume?.(s.musicVolume ?? 0.35);
     setLoaded(true);
   }, []);
 
   useEffect(() => {
     refreshAll();
   }, [refreshAll]);
+
+  /** Signs a player in by name and loads that profile's saved world. */
+  const signIn = useCallback(
+    async (name) => {
+      const record = await signInProfile(name);
+      if (!record) return null;
+      await refreshAll();
+      return record;
+    },
+    [refreshAll],
+  );
+
+  const signOut = useCallback(async () => {
+    signOutProfile();
+    setProfile(null);
+    setSettings(DEFAULT_SETTINGS);
+    setProgress(DEFAULT_PROGRESS);
+    setUnlockedAchievements([]);
+    setHasSave(false);
+  }, []);
 
   const saveSettings = useCallback(async (patch) => {
     const next = await updateSettings(patch);
@@ -58,6 +90,7 @@ export function GameProvider({ children }) {
   const saveProgress = useCallback(async (patch) => {
     const next = await updateProgress(patch);
     setProgress(next);
+    touchProfile({ highestWaveReached: next.highestWaveReached });
     return next;
   }, []);
 
@@ -111,6 +144,9 @@ export function GameProvider({ children }) {
   const value = useMemo(
     () => ({
       loaded,
+      profile,
+      signIn,
+      signOut,
       settings,
       progress,
       unlockedAchievements,
@@ -120,6 +156,7 @@ export function GameProvider({ children }) {
       saveSettings,
       saveProgress,
       tryUnlockAchievement,
+      pushToast,
       toasts,
       status,
       statusRef,
@@ -130,6 +167,9 @@ export function GameProvider({ children }) {
     }),
     [
       loaded,
+      profile,
+      signIn,
+      signOut,
       settings,
       progress,
       unlockedAchievements,
@@ -138,6 +178,7 @@ export function GameProvider({ children }) {
       saveSettings,
       saveProgress,
       tryUnlockAchievement,
+      pushToast,
       toasts,
       status,
       setGameStatus,

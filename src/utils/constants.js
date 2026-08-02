@@ -93,6 +93,9 @@ export const WAVES = [
   { wave: 12, formation: 'cross', choreography: 'carousel', rows: 3, cols: 8, roster: ['Sierpinski', 'Pentagram', 'Torus'], fireRateMul: 1.1 },
   { wave: 13, formation: 'hourglass', choreography: 'breathe', rows: 4, cols: 8, roster: ['Squircle', 'Astroid', 'Tank'], fireRateMul: 1.15 },
   { wave: 14, formation: 'orbit', choreography: 'figure8', rows: 3, cols: 9, roster: ['Helix', 'Lemniscate', 'Rosette'], fireRateMul: 1.2 },
+  { wave: 16, formation: 'lattice', choreography: 'drift', rows: 3, cols: 9, roster: ['Cogwheel', 'Heptagram', 'Crescent'], fireRateMul: 1.25 },
+  { wave: 17, formation: 'wave', choreography: 'carousel', rows: 4, cols: 9, roster: ['Trefoil', 'Epicycle', 'Spirograph'], fireRateMul: 1.3 },
+  { wave: 18, formation: 'hourglass', choreography: 'figure8', rows: 4, cols: 9, roster: ['Spirograph', 'Cogwheel', 'Squircle'], fireRateMul: 1.35 },
 ];
 
 export function getWaveConfig(wave) {

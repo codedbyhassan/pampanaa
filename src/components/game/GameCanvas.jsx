@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import setupCanvas from '../../canvas/setupCanvas';
 import GameEngine from '../../canvas/GameEngine';
-import { WORLD, SHOW_FPS } from '../../utils/constants';
+import { WORLD } from '../../utils/constants';
 import { WEAPON_ORDER } from '../weapons/weaponTypes';
 import { useGame } from '../../contexts/GameContext';
 import { useGameLoop } from '../../hooks/useGameLoop';
@@ -10,6 +10,7 @@ import { useGamepad } from '../../hooks/useGamepad';
 
 export function GameCanvas({
   mode,
+  startWave = 1,
   resumeSnapshot,
   paused,
   scheme,
@@ -85,6 +86,7 @@ export function GameCanvas({
       settings,
       progress,
       mode,
+      startWave,
       callbacks: { onSync: syncFromEngine, onEvent: onEngineEvent },
     });
     engineRef.current = engine;
@@ -171,5 +173,4 @@ export function GameCanvas({
   );
 }
 
-export { SHOW_FPS };
 export default GameCanvas;

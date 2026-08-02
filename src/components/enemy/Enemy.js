@@ -115,6 +115,20 @@ export class Enemy {
         return { x: 0, y: Math.sin(t * 1.2) * r * 0.35 };
       case 'bob':
         return { x: Math.sin(t * 1.1) * r * 0.3, y: Math.cos(t * 0.9) * r * 0.2 };
+      // Sharp triangle-wave slide, so the ship snaps between lanes.
+      case 'zigzag': {
+        const phase = (t * 0.9) % 2;
+        return { x: (phase < 1 ? phase * 2 - 1 : 3 - phase * 2) * r * 1.1, y: 0 };
+      }
+      // Braided sine pair: horizontal weave with a slower vertical roll.
+      case 'weave':
+        return { x: Math.sin(t * 1.7) * r * 1.2, y: Math.sin(t * 0.7) * r * 0.5 };
+      // Nervous high-frequency shudder around the slot.
+      case 'jitter':
+        return {
+          x: (Math.sin(t * 5.1) + Math.sin(t * 2.3)) * r * 0.25,
+          y: Math.sin(t * 4.3) * r * 0.2,
+        };
       default:
         return { x: 0, y: 0 };
     }
@@ -181,6 +195,48 @@ export class Enemy {
       case 'diagonal':
         this.fireAngle(engine, Math.PI / 2 - 0.7, 330, dmg);
         return this.fireAngle(engine, Math.PI / 2 + 0.7, 330, dmg);
+      case 'radial7':
+        return this.fireFan(engine, 7, 2.1, 230, dmg * 0.7);
+      // Horizontal curtain of slow rounds the player has to slip through.
+      case 'wall5': {
+        for (let i = -2; i <= 2; i++) {
+          engine.spawnProjectile({
+            x: this.x + i * this.width * 0.55,
+            y: this.y + this.height * 0.4,
+            vx: 0,
+            vy: 200,
+            width: 8,
+            height: 8,
+            damage: dmg * 0.6,
+            color: engine.palette.enemyProjectile,
+            source: 'enemy',
+            life: 6,
+          });
+        }
+        return undefined;
+      }
+      // Two counter-rotating spiral arms.
+      case 'twinSpiral': {
+        const a = this.bob * 2.4;
+        this.fireAngle(engine, a, 250, dmg * 0.7);
+        return this.fireAngle(engine, a + Math.PI, 250, dmg * 0.7);
+      }
+      // Four-way cross that slowly rotates with the body spin.
+      case 'cross4': {
+        for (let i = 0; i < 4; i++) {
+          this.fireAngle(engine, this.spin + (i * Math.PI) / 2, 220, dmg * 0.65);
+        }
+        return undefined;
+      }
+      // Wide sweeping beam-like arc that tracks left to right over time.
+      case 'sweep': {
+        const a = Math.PI / 2 + Math.sin(this.bob * 0.8) * 1.3;
+        this.fireAngle(engine, a, 320, dmg);
+        return this.fireAngle(engine, a + 0.22, 320, dmg);
+      }
+      // Heavy, slow arcing shell.
+      case 'lob':
+        return this.fireAtPlayer(engine, 170, dmg * 1.6, 16);
       case 'spiralShot': {
         const a = Math.PI / 2 + Math.sin(this.bob * 2) * 1.1;
         return this.fireAngle(engine, a, 300, dmg);

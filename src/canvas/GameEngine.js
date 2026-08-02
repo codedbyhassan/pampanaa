@@ -46,7 +46,7 @@ export class GameEngine {
     this.damageNumbers = new DamageNumbers();
     this.pickups = new PickupSystem();
     this.shake = new ScreenShake();
-    this.shake.enabled = !settings.reducedMotion;
+    this.shake.enabled = !settings.reducedMotion && settings.screenShake !== false;
     this.formation = new FormationManager(this);
 
     this.score = 0;
@@ -89,7 +89,7 @@ export class GameEngine {
   }
 
   get theme() {
-    return themeForWave(this.wave);
+    return themeForWave(this.wave, this.settings.backgroundTheme || 'auto');
   }
 
   get currentWeapon() {
@@ -195,7 +195,9 @@ export class GameEngine {
   damageEnemy(enemy, amount, weaponKey) {
     if (!enemy.active) return;
     const died = enemy.takeDamage(amount);
-    this.damageNumbers.spawn(enemy.x, enemy.y - enemy.height / 2, amount);
+    if (this.settings.damageNumbers !== false) {
+      this.damageNumbers.spawn(enemy.x, enemy.y - enemy.height / 2, amount);
+    }
     if (enemy === this.boss) this.syncBoss();
     // Heavily amplified rounds set enemies alight and slow their cadence.
     const amps = this.player.amps || {};

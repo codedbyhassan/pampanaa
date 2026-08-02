@@ -1,7 +1,7 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'shooting-game';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 let dbPromise = null;
 
@@ -29,6 +29,10 @@ export function getDB() {
         }
         if (!db.objectStoreNames.contains('achievements')) {
           db.createObjectStore('achievements', { keyPath: 'id' });
+        }
+        // v4 — name-based player profiles.
+        if (!db.objectStoreNames.contains('profiles')) {
+          db.createObjectStore('profiles', { keyPath: 'name' });
         }
       },
     });
