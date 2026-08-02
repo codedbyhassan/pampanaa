@@ -1,170 +1,280 @@
 # Pampanaa
 
-**Pampanaa** is an offline-first arcade formation shooter that runs entirely in the browser. Choreographed enemy squads sweep in across 14 procedurally drawn environments — ocean, land, city, sky and deep space — while you clear waves, unlock weapons and chase your best score. Every player has a named profile stored locally in IndexedDB, so progress, settings, saves and achievements follow the name you sign in with. No account, no server, no password.
+**Pampanaa** is an arcade space shooter with choreographed enemy formations, dynamic difficulty, and procedural environments. Clear waves of enemies, collect power-ups, unlock weapons, and chase your best score. Fully offline—no servers, no accounts, just pure arcade action.
 
-![Gameplay](docs/screenshots/gameplay.png)
+![Pampanaa Menu](docs/screenshots/menu-main.png)
 
 ---
 
-## Table of contents
+## Table of Contents
 
 - [Features](#features)
-- [Screenshots](#screenshots)
-- [Getting started](#getting-started)
-- [How to play](#how-to-play)
-- [Game systems](#game-systems)
-- [Settings reference](#settings-reference)
-- [Data & persistence](#data--persistence)
-- [Tech stack](#tech-stack)
-- [Project structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
+- [Getting Started](#getting-started)
+- [How to Play](#how-to-play)
+- [Game Systems](#game-systems)
+- [Gameplay Features](#gameplay-features)
+- [Settings](#settings)
+- [Data & Persistence](#data--persistence)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
 
 ---
 
 ## Features
 
-- **Named player profiles** — sign in with any name; progress, settings, saves, scores and achievements are namespaced per profile in IndexedDB.
-- **14 background environments** — Deep Space, Nebula Drift, Open Ocean, Coral Reef, Midnight Abyss, Green Meadow, Night Forest, Desert Dunes, Red Canyon, Ice Field, Volcanic, Neon City, Storm Front and Sunset Coast — each rendered with a multi-layer procedural parallax engine (waves, dunes, hills, skylines, treelines, rain, snow, bubbles, clouds).
-- **Auto rotation or a locked theme** — pick one environment or let the game cycle every three waves.
-- **Level select & replay** — replay any cleared wave, resume at your current level, or start the campaign over. Per-wave best scores are tracked.
-- **Twenty-one enemy species** — every enemy is a mathematical figure: polygons, star polygons, lemniscate, astroid, rose curve, cardioid, helix, torus, Sierpinski triangle, squircle, gear, heptagram, trefoil knot, epicycloid, spirograph and crescent.
-- **Layered attack logic** — aimed, fan, radial, ring, spiral, cross, sweeping arc, curtain wall and lobbed shell patterns, plus zigzag, weave, jitter, orbit, figure-eight and pulse movement.
-- **Formation choreography** — grid, vee, arc, diamond, columns, rings, spiral, lattice, wave, cross, hourglass and orbit formations animated with sway, pendulum, breathe, tide, carousel, drift and figure-eight routines.
-- **Five weapons** — blaster, shotgun, laser, homing missiles and flamethrower, unlocked as waves progress.
-- **Boss waves** every fifth wave, with dedicated multi-phase boss bodies.
-- **Redesigned settings** — transparent sidebar navigation, grouped categories, plain-language descriptions and a live preview for every background.
-- **Accessibility** — colourblind palette, reduced motion, screen-shake toggle, FPS readout, rebindable keys, and keyboard / mouse / touch / gamepad support.
-- **Centered achievement toasts**, hidden scrollbars everywhere, and a Plus Jakarta Sans type system with soft, rounded Apple-style controls.
-- **Fully offline** — no network calls at runtime.
+### Core Gameplay
+- **Formation-Based Enemies** — enemies arrive in choreographed squads with procedurally animated patterns (grid, vee, arc, diamond, columns, rings, spiral, lattice, wave, cross, hourglass, orbit)
+- **Dynamic Choreography** — sway, pendulum, breathe, carousel, tide, figure-8, and drift movement routines layered on top of formations
+- **21+ Enemy Species** — each drawn as a mathematical figure: polygons, star polygons, curves (lemniscate, astroid, rose), Sierpinski triangles, squircles, gears, and more
+- **Layered Attack Patterns** — aimed, fan, radial, ring, spiral, cross, sweeping arcs, curtain walls, and lobbed shells
+- **Boss Fights** — capital-class bosses appear every 5 waves with unique attack patterns
 
-## Screenshots
+### Player Arsenal
+- **5 Weapons** — Blaster (wave 1), Shotgun (wave 2), Laser (wave 4), Homing Missiles (wave 6), Flamethrower (wave 8)
+- **Amplifier System** — collect permanent damage, fire-rate, pierce, and multishot stacks that compound across runs
+- **Weapon Pickups** — best amplifiers only drop after defeating bosses, balanced by wave progression
+- **Temporary Buffs** — shield, rapid fire, score multiplier, auto-lock, and multi-shot bonuses
 
-| Sign in | Main menu |
-| --- | --- |
-| ![Profile sign in](docs/screenshots/profile.png) | ![Main menu](docs/screenshots/main-menu.png) |
+### Environments
+- **14 Procedural Backgrounds** — Deep Space, Nebula Drift, Open Ocean, Coral Reef, Midnight Abyss, Green Meadow, Night Forest, Desert Dunes, Red Canyon, Ice Field, Volcanic, Neon City, Storm Front, Sunset Coast
+- **Dynamic Parallax Rendering** — multi-layer backgrounds with procedural waves, dunes, hills, skylines, weather effects
+- **Auto-Rotation or Lock** — cycle environments every 3 waves or pick your favorite
 
-| Settings — backgrounds | Level select |
-| --- | --- |
-| ![Settings](docs/screenshots/settings-backgrounds.png) | ![Level select](docs/screenshots/level-select.png) |
+### Player Experience
+- **Named Profiles** — sign in with any name; all progress, settings, and achievements are locally stored per profile
+- **Level Select & Replay** — replay any cleared wave with best scores tracked per level
+- **Wave Mastery Badges** — earn "Perfect Wave" badges for no-damage clears and "Flawless" badges for no-hit runs
+- **Combo System** — kill streak tracking with score multipliers (1.0x base, up to 2.0x at 10+ consecutive kills)
+- **Accessibility** — colorblind palette, reduced motion toggle, rebindable controls, FPS counter, keyboard/mouse/gamepad/touch support
 
-## Getting started
+### UI & Polish
+- **Redesigned Interface** — transparent sidebar blends seamlessly with background, clean menu navigation without sub-descriptions
+- **Player Header** — account switcher in top-right corner with current player name and skin
+- **Subtle Status Displays** — pickups fade in/out without cluttering the screen
+- **Combo Counter** — positioned bottom-right for full gameplay visibility
+- **Pampanaa Branding** — logo featured on splash, home menu, and throughout the app
+
+## Getting Started
 
 ### Requirements
-
 - Node.js 20+ (or [Bun](https://bun.sh) 1.1+)
-- A Chromium, Firefox or Safari build with Canvas 2D and IndexedDB
+- Chromium, Firefox, or Safari with Canvas 2D and IndexedDB support
 
-### Install and run
-
-```bash
-bun install       # or: npm install
-bun run dev       # or: npm run dev
-```
-
-The dev server starts on [http://localhost:8080](http://localhost:8080).
-
-### Production build
+### Install & Run
 
 ```bash
-bun run build
-bun run start
+npm install        # or: bun install
+npm run dev        # or: bun run dev
 ```
 
-## How to play
+Dev server starts at [http://localhost:5173](http://localhost:5173)
+
+### Production Build
+
+```bash
+npm run build
+npm run preview
+```
+
+### Electron Desktop App
+
+```bash
+npm run electron-dev       # Build and launch with Electron
+npm run electron-build     # Create installers (Windows, macOS, Linux)
+```
+
+## How to Play
+
+### Controls
 
 | Action | Input |
-| --- | --- |
+|--------|-------|
 | Move | `W A S D` / arrow keys / left stick / touch stick |
-| Aim & fire | Mouse, `Space`, right trigger, or touch fire button |
-| Switch weapon | Scroll wheel, `1`–`5`, `Q` / `E` |
+| Aim & Fire | Mouse / `Space` / right trigger / touch fire button |
+| Switch Weapon | Scroll wheel / `1`–`5` / `Q` / `E` |
 | Pause | `Escape` |
 
-Enemies arrive as a choreographed squad and hold their lanes. Clear the whole squad to advance the wave. Power-ups drift downward — fly under them to collect. Every fifth wave is a boss.
+### Gameplay Flow
 
-## Game systems
+1. **Clear Waves** — enemies arrive as a choreographed squad; clear them all to advance
+2. **Collect Power-ups** — pickups drift downward; fly under them to collect
+3. **Boss Every 5 Waves** — capital-class bosses drop special amplifiers on defeat
+4. **Escalate Difficulty** — choose 1–10 difficulty to scale enemy stats and frequency
+5. **Track Progress** — wave completion, achievements, and best scores are saved per profile
 
-**Waves.** Each wave defines a formation, a choreography routine, a roster of species, row/column counts and a fire-rate multiplier. Beyond the authored table, waves are generated procedurally so endless mode never runs dry.
+## Game Systems
 
-**Difficulty.** A single 1–8 slider scales enemy health, squad size, formation speed, firing cadence and pickup frequency.
+### Wave Progression
+- **Authored Waves** — waves 1–18 have hand-tuned formations, choreography, rosters, and difficulty curves
+- **Procedural Waves** — waves 19+ are generated procedurally so endless mode never repeats
+- **Difficulty Scaling** — wave progression compounds with your chosen difficulty level
+- **Wave Mastery** — track perfect (no-damage) and flawless (no-hit) clears per wave/difficulty combo
 
-**Weapons.** Blaster (wave 1), shotgun, laser, homing missile and flamethrower unlock at set waves. Damage and fire-rate amps drop as pickups; heavily amped rounds set enemies alight and slow their cadence.
+### Difficulty System
+Single 1–10 slider adjusts:
+- Enemy health & damage multiplier
+- Projectile frequency
+- Formation speed and entry speed
+- Squad size (fewer enemies at high difficulty for fairness)
+- Pickup drop rate (still generous even on Nightmare)
 
-**Achievements.** Unlocks are stored per profile and surface as a centered toast; some award new ship skins.
+**Difficulty Levels:**
+1. Sightseeing — very easy, learning-friendly
+2. Relaxed — casual gameplay
+3. Casual — friendly challenge
+4. Standard — balanced, recommended
+5. Brisk — getting difficult
+6. Spirited — sharp reflexes required
+7. Tense — expert difficulty
+8. Hostile — highly challenging
+9. Brutal — extreme difficulty
+10. Nightmare — mastery only
 
-## Settings reference
+### Weapon & Amplifier System
+- **Unlocking** — weapons unlock automatically as waves progress
+- **Amplifiers** — drop from enemies (common) or bosses (rare)
+- **Damage Amp** — +20% damage per stack
+- **Fire Rate Amp** — +15% fire rate per stack (max 5)
+- **Multishot Amp** — +1 barrel per stack (max 5, doubles with multishot buff)
+- **Pierce Amp** — bullets ignore armor and slow enemies
+- **Boss Pickups** — only available after defeating bosses, wave-gated (autolock at wave 30+, full pool at 50+)
 
-| Section | What it controls |
-| --- | --- |
-| Player | Active profile, lifetime summary, switch player |
-| Gameplay | Difficulty slider, auto-save, damage numbers, screen shake, replay the tutorial card |
-| Backgrounds | Auto rotation or any of the 14 environments, with a preview and description each |
-| Appearance | Six interface themes and four ship hull designs |
-| Audio | Master volume, sound effects, procedural music, music volume |
-| Controls | Control scheme and rebindable movement/fire keys |
-| Accessibility | Colourblind palette, reduced motion, FPS counter |
-| Data | Reset settings, clear the saved run, erase progress |
+### Combo System
+- **Kill Streaks** — consecutive kills within 1.5 seconds
+- **Score Multiplier** — +50 points per kill, x1.5-x2.0 multiplier based on combo count
+- **Visual Feedback** — combo counter displays in bottom-right with pulsing animation
 
-Every control on the page is wired to persistent state — changes apply immediately and survive a reload.
+## Gameplay Features
 
-## Data & persistence
+### Pickups & Power-ups
+- **Health Repair** — restore 25 hull points
+- **Shield** — 5-second invulnerability
+- **Rapid Fire** — 7-second doubled fire rate
+- **Double Score** — 9-second score multiplier
+- **Auto-Lock** — 12-second automatic targeting
+- **Multishot Buff** — 10-second barrel doubler
+- **Amplifiers** — permanent stacking bonuses (damage, fire rate, pierce, multishot)
 
-All data lives in the browser's IndexedDB database (`pampanaa`, schema v4) with these stores:
+### Achievement System
+- Unlocked achievements stored per profile
+- Centered toast notifications
+- Some achievements unlock new ship skins
+- Tracked stats: waves cleared, enemies defeated, kills, damage dealt
 
-| Store | Contents |
-| --- | --- |
+### Visual Effects
+- **Particle Bursts** — pickup collection, explosions, impact feedback
+- **Screen Shake** — intensity scales with damage (max on boss kills)
+- **Damage Numbers** — floating text showing enemy damage taken
+- **Combo Animation** — pulsing counter display on consecutive kills
+
+## Settings
+
+Every setting is persistent per profile:
+
+| Category | Options |
+|----------|---------|
+| **Gameplay** | Difficulty (1–10), auto-save on wave clear, damage numbers, screen shake toggle |
+| **Backgrounds** | Auto-rotation or any of 14 environments with preview |
+| **Appearance** | 6 UI themes, 6 ship hull designs |
+| **Audio** | Master volume, SFX volume, procedural music toggle, music volume |
+| **Controls** | Control scheme (keyboard/gamepad), rebindable keys for movement and fire |
+| **Accessibility** | Colorblind palette, reduced motion, FPS counter, fullscreen |
+| **Data** | Reset all settings, clear saved run, erase all profile data |
+
+## Data & Persistence
+
+All data stored locally in IndexedDB (database: `pampanaa`, schema v4):
+
+| Store | Purpose |
+|-------|---------|
 | `profiles` | Player names, creation time, last session |
-| `settings` | Per-profile settings record |
-| `playerProgress` | Unlocks, cleared waves, per-wave best scores, lifetime stats |
-| `saves` | Resume snapshots written on wave clear when auto-save is on |
-| `scores` | Local leaderboard entries |
-| `achievements` | Unlocked achievement ids per profile |
+| `settings` | Per-profile game settings (difficulty, audio, controls) |
+| `playerProgress` | Wave completions, best scores, lifetime stats, unlocks |
+| `saves` | Auto-save snapshots for resume functionality |
+| `scores` | Local leaderboard (top runs per profile) |
+| `achievements` | Unlocked achievement IDs per profile |
 
-Nothing leaves the device. Clearing browser storage erases all profiles.
+**Privacy:** All data remains on your device. No network calls at runtime.
 
-## Tech stack
+## Tech Stack
 
-- **React 19** with **TanStack Start / Router v1**
-- **Vite 7** build pipeline
-- **Canvas 2D** rendering — no sprites, all vector art generated at runtime
-- **Web Audio API** for procedural music and effects
-- **idb** for IndexedDB access
-- Plain CSS with a token-driven theme layer (`src/styles/variables.css`)
+- **Frontend Framework** — React 19
+- **Build Tool** — Vite 8
+- **Rendering** — Canvas 2D (vector art generated at runtime, no sprites)
+- **State Management** — React Context + hooks
+- **Audio** — Web Audio API (procedural music and effects)
+- **Persistence** — IndexedDB (via `idb` library)
+- **Desktop** — Electron 31 with electron-builder
+- **Styling** — Plain CSS with design tokens
+- **Fonts** — Plus Jakarta Sans (Google Fonts)
 
-## Project structure
+## Project Structure
 
-```text
-src/
-  canvas/          GameEngine, parallax renderer, background themes, sprite drawer
-  components/
-    audio/         Procedural sound manager
-    effects/       Particles, screen shake, damage numbers
-    enemy/         Enemy class, species definitions, formation manager, bosses
-    game/          Canvas host, HUD, pause, game over, toasts, touch controls
-    physics/       Collision resolution
-    pickups/       Pickup system and types
-    player/        Player ship
-    weapons/       Weapon definitions and projectiles
-  contexts/        Game and audio providers
-  database/        IndexedDB: profiles, settings, progress, saves, scores, achievements
-  hooks/           Game loop, keyboard, gamepad, touch
-  pages/           Profile, MainMenu, LevelSelect, GamePage, Settings, Stats, ...
-  routes/          TanStack Start routes and document head metadata
-  styles/          Design tokens and global stylesheet
-  utils/           Constants, wave tables, achievement definitions, object pool
-docs/screenshots/  README imagery
 ```
+src/
+├── canvas/               # Game rendering engine
+│   ├── GameEngine.js     # Main game loop, collision, wave logic
+│   ├── spriteDrawer.js   # Vector art for enemies, player, effects
+│   ├── parallaxRenderer.js  # Multi-layer background rendering
+│   └── backgroundThemes.js  # 14 environment definitions
+├── components/
+│   ├── audio/            # SoundManager, procedural audio
+│   ├── effects/          # Particles, screen shake, damage numbers
+│   ├── enemy/            # Enemy class, 21+ species, bosses, formations
+│   ├── game/             # Game canvas, HUD, pause menu, game over
+│   ├── physics/          # Collision detection and resolution
+│   ├── pickups/          # Pickup system and drop types
+│   ├── player/           # Player ship, weapons, buffs
+│   └── weapons/          # 5 weapon types and projectiles
+├── contexts/             # Game provider, audio provider
+├── database/             # IndexedDB schemas and queries
+├── hooks/                # Game loop, input (keyboard/gamepad/touch)
+├── pages/                # UI pages (menu, settings, leaderboard, etc.)
+├── styles/               # Global CSS, design tokens, theme system
+└── utils/                # Constants, wave config, achievements, object pooling
+
+public/
+└── logo.png              # Pampanaa brand logo
+```
+
+### Key Files
+
+- **GameEngine.js** — Main game loop (60 FPS), enemy spawning, collision, wave progression, boss logic, combo tracking
+- **Enemy.js / Boss.js** — Entity classes with AI, attack patterns, health/damage
+- **Weapon.js** — Base weapon class; subclasses for blaster, shotgun, laser, homing, flamethrower
+- **Pickup.js** — Pickup spawn, magnetism, collection, amplifier stacking
+- **GameHUD.jsx** — Score, wave, health display, weapon selector, buff indicators, combo counter
+- **MenuShell.jsx** — Sidebar navigation, home hero, player header with account switcher
+- **constants.js** — Wave config, difficulty multipliers, achievement thresholds, weapon unlock waves
+
+---
+
+## Gameplay Balance
+
+### Pickup Availability
+- **Common Pickups** — health, shield, rapid fire, score multiplier, auto-lock drop from regular enemies
+- **Boss Pickups** — damage/fire-rate/pierce/multishot amplifiers and advanced effects (e.g., auto-lock) only after boss defeats
+- **Wave Gating** — early game (1–30): basic amplifiers only; mid-game (30–50): auto-lock available; late-game (50+): all pickups
+
+### Difficulty Tuning
+- **Generous Pickup Rate** — even on Nightmare difficulty, you get meaningful power-ups
+- **Scaled Enemy Stats** — enemy health and damage increase linearly with difficulty, never exponentially
+- **Squad Size** — actually decreases at high difficulty to maintain playability
+- **Fire Rate** — increases more smoothly to avoid instant-death scenarios
+
+---
 
 ## Contributing
 
-Issues and pull requests are welcome.
+Pull requests welcome! To add content:
 
-1. Fork the repository and create a branch.
-2. Keep changes focused; match the existing code style (no build-time linting surprises).
-3. Adding an enemy is a one-row change in `src/components/enemy/enemyDefs.js` plus a shape in `src/canvas/spriteDrawer.js`.
-4. Adding a background is a one-entry change in `src/canvas/backgroundThemes.js`; the settings picker and rotation pick it up automatically.
-5. Run `bun run build` before opening the PR.
+1. **New Enemy** — one-line entry in `src/components/enemy/enemyDefs.js` + shape in `spriteDrawer.js`
+2. **New Background** — one entry in `backgroundThemes.js`; settings picker picks it up automatically
+3. **New Weapon** — subclass `Weapon`, define fireRate/damage/spread, add to weapon pool
+4. **New Achievement** — entry in achievement table + definition in `constants.js`
+
+---
 
 ## License
 
-Released under the [MIT License](LICENSE).
+MIT
