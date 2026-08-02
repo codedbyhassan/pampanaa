@@ -586,3 +586,7 @@ body::-webkit-scrollbar,
   .sg-side__nav { flex-direction: row; overflow-x: auto; }
   .sg-navitem { min-width: 150px; }
 }
+
+.sg-level em { font-style: normal; font-size: 11px; color: var(--sg-accent); }
+.sg-level[data-done='true'] { background: color-mix(in oklab, var(--sg-accent) 12%, transparent); }
+.sg-panel--wide { max-width: 820px; }

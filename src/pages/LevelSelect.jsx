@@ -24,7 +24,7 @@ export function LevelSelect({ onPlayWave, onContinue, onBack }) {
   };
 
   return (
-    <div className="sg-panel">
+    <div className="sg-panel sg-panel--wide">
       <h2 className="sg-h2">Level Select</h2>
       <p className="sg-muted" style={{ marginTop: -8, marginBottom: 18, lineHeight: 1.7 }}>
         Replay any wave you have already cleared, jump straight back to your current level,
@@ -57,7 +57,7 @@ export function LevelSelect({ onPlayWave, onContinue, onBack }) {
       </div>
 
       <div className="sg-label" style={{ marginBottom: 8 }}>Waves</div>
-      <div className="sg-levels">
+      <div className="sg-levelgrid">
         {waves.map((w) => {
           const unlocked = w <= maxUnlocked;
           const done = cleared.has(w);
@@ -67,7 +67,7 @@ export function LevelSelect({ onPlayWave, onContinue, onBack }) {
               key={w}
               className="sg-level"
               disabled={!unlocked}
-              data-done={done}
+              data-done={done} data-boss={w % 5 === 0}
               onClick={() => onPlayWave(w)}
               title={`${cfg.formation} formation · ${cfg.choreography} choreography`}
             >
