@@ -51,7 +51,7 @@ Date: 2026-08-02. Scope: full `src/` tree after the weapon + UI redesign.
 
 ## 4. UI/UX recommendations (next)
 
-1. Keyboard/gamepad navigation for the sidebar (arrow keys + Enter) — required for a真 AAA feel.
+1. Keyboard/gamepad navigation for the sidebar (arrow keys + Enter) — required for a true AAA feel.
 2. Add a confirmation step before "Start New Game" when a save exists.
 3. Show active permanent amplifiers (damage / cadence / pierce / barrels) as HUD chips —
    right now only timed buffs are visible.
