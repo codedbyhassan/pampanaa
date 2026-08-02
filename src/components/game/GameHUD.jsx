@@ -7,6 +7,8 @@ const BUFF_LABEL = {
   shield: PICKUP_TYPES.shield.label,
   rapidFire: PICKUP_TYPES.rapidFire.label,
   scoreMultiplier: PICKUP_TYPES.scoreMultiplier.label,
+  autoLock: PICKUP_TYPES.autoLock.label,
+  multishot: PICKUP_TYPES.multishot.label,
 };
 
 export function GameHUD({ hud, mode, fps }) {
@@ -39,7 +41,7 @@ export function GameHUD({ hud, mode, fps }) {
         <div className="sg-buffs">
           {activeBuffs.map(([key, value]) => (
             <div className="sg-buff" key={key}>
-              {BUFF_LABEL[key]} · {Math.ceil(value)}s
+              {BUFF_LABEL[key] || key} · {Math.ceil(value)}s
             </div>
           ))}
         </div>
