@@ -208,8 +208,9 @@ export class Enemy {
             width: 8,
             height: 8,
             damage: dmg * 0.6,
-            owner: 'enemy',
-            color: this.color,
+            color: engine.palette.enemyProjectile,
+            source: 'enemy',
+            life: 6,
           });
         }
         return undefined;
