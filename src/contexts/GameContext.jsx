@@ -30,8 +30,12 @@ export function GameProvider({ children }) {
     wave: 1,
     weapon: 'blaster',
     buffs: { shield: 0, rapidFire: 0, scoreMultiplier: 0 },
+    amps: { damage: 0, fire: 0, pierce: 0, multishot: 0 },
+    combo: 0,
+    comboMultiplier: 1,
     boss: null,
     waveBanner: false,
+    waveMastery: null,
     unlockedWeapons: ['blaster'],
   });
   const statusRef = useRef('idle');
@@ -134,8 +138,12 @@ export function GameProvider({ children }) {
       wave: 1,
       weapon: 'blaster',
       buffs: { shield: 0, rapidFire: 0, scoreMultiplier: 0 },
+      amps: { damage: 0, fire: 0, pierce: 0, multishot: 0 },
+      combo: 0,
+      comboMultiplier: 1,
       boss: null,
       waveBanner: false,
+      waveMastery: null,
       unlockedWeapons: ['blaster'],
       ...initial,
     });

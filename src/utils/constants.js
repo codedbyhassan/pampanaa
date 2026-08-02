@@ -134,6 +134,19 @@ export const DIFFICULTY_LABELS = {
   10: 'Nightmare',
 };
 
+export const DIFFICULTY_DESCRIPTIONS = {
+  1: 'Very easy - perfect for learning the game and practicing mechanics.',
+  2: 'Relaxed gameplay - low pressure, good for casual play.',
+  3: 'Casual - friendly challenge with time to think.',
+  4: 'Standard - balanced, recommended difficulty for most players.',
+  5: 'Brisk - getting challenging, enemies are noticeably tougher.',
+  6: 'Spirited - difficult, requires sharp reflexes and strategy.',
+  7: 'Tense - expert difficulty, minimal amplifier drops, enemy formations are aggressive.',
+  8: 'Hostile - highly challenging, for skilled players only.',
+  9: 'Brutal - extreme difficulty, expect many deaths.',
+  10: 'Nightmare - only for mastery seekers, extreme enemy stats and frequency.',
+};
+
 export function difficultyMods(level = 4) {
   const l = Math.max(DIFFICULTY_MIN, Math.min(DIFFICULTY_MAX, Math.round(level)));
   const t = (l - 1) / 9; // 0..1

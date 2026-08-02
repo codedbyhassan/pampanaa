@@ -247,6 +247,46 @@ html, body {
   letter-spacing: 1.5px;
 }
 
+.sg-amplifiers { display: flex; gap: 8px; flex-wrap: wrap; }
+.sg-amplifier-badge {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.sg-amplifier-label { opacity: 0.8; }
+.sg-amplifier-count { font-size: 11px; opacity: 1; }
+
+.sg-combo {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff006e, #d62828);
+  border: 2px solid #ff006e;
+  border-radius: 12px;
+  padding: 12px 20px;
+  text-align: center;
+  animation: sg-combo-pulse 0.3s ease-out;
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.6);
+  z-index: 1000;
+  }
+.sg-combo__label { font-size: 9px; letter-spacing: 2px; color: rgba(255, 255, 255, 0.8); font-weight: 600; text-transform: uppercase; }
+.sg-combo__count { font-size: 28px; font-weight: 700; color: #fff; line-height: 1; margin: 4px 0; }
+.sg-combo__mult { font-size: 13px; color: #ffd700; font-weight: 600; }
+
+@keyframes sg-combo-pulse {
+  0% { transform: translateX(-50%) scale(0.8); opacity: 0; }
+  50% { transform: translateX(-50%) scale(1.1); }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
 .sg-banner {
   position: absolute;
   top: 40%;
@@ -258,8 +298,29 @@ html, body {
   letter-spacing: 12px;
   text-transform: uppercase;
   color: var(--sg-accent);
-  text-shadow: 0 0 40px color-mix(in oklab, var(--sg-accent) 60%, transparent);
-  animation: sg-pop 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.sg-banner__mastery {
+  font-size: clamp(16px, 3vw, 28px);
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  letter-spacing: 4px;
+  animation: sg-mastery-pulse 0.5s ease-out;
+}
+
+.sg-banner__mastery[data-mastery='NO_HIT'] {
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+}
+
+@keyframes sg-mastery-pulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes sg-pop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }

@@ -98,6 +98,7 @@ export function GameCanvas({
       health: engine.player.health,
       wave: engine.wave,
       weapon: engine.currentWeaponKey,
+      amps: { ...engine.player.amps },
       unlockedWeapons: [...engine.unlockedWeapons],
     });
     engine.draw(ctxRef.current, 0);

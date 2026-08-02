@@ -60,12 +60,20 @@ export class GameEngine {
     this.sessionKills = 0;
     this.killsByType = {};
     this.shotsByWeapon = {};
+    // Combo system: consecutive kills reset the timer
+    this.combo = 0;
+    this.comboTimer = 0;
+    this.comboTimerMax = 1.5;
+    // Wave mastery tracking
+    this.waveStartHealth = PLAYER.maxHealth;
+    this.waveMaxTime = 0;
     this.input = { x: 0, y: 0, firing: false, aim: null };
     this.fps = 0;
     this._fpsAcc = 0;
     this._fpsFrames = 0;
     this._lastBossHealth = null;
     this._lastBuffSec = 0;
+    this._lastAmpString = '';
     this.startingWave = 1;
     if (startWave > 1) {
       this.wave = startWave;
@@ -177,6 +185,9 @@ export class GameEngine {
 
   startWave() {
     this.waveStarted = true;
+    // Record wave start state for mastery tracking
+    this.waveStartHealth = this.player.health;
+    this.waveMaxTime = 0;
     this.enemies = this.enemies.filter((e) => e.active && e.mode === 'free');
     if (this.isBossWave) {
       const boss = new Boss(WORLD.width / 2, -120, this.difficultyMods.statMul, this.wave);
@@ -207,6 +218,9 @@ export class GameEngine {
     if (amps.fire >= 3) enemy.applySlow?.(1.6);
     if (!died) {
       this.sound.play('hit');
+      // Screen shake on hit scales with damage
+      const shakeMagnitude = Math.min(8, 2 + amount / 50);
+      this.shake.trigger(shakeMagnitude);
       return;
     }
 
@@ -214,13 +228,21 @@ export class GameEngine {
     const isBoss = enemy.type === 'Boss';
     this.particles.burst(enemy.x, enemy.y, enemy.color, isBoss ? 46 : 10, isBoss ? 340 : 200);
     this.sound.play(isBoss ? 'bossExplosion' : 'explosion');
+    // Screen shake on kill - more intense for bosses
+    this.shake.trigger(isBoss ? 18 : 4);
+
+    // Build combo
+    this.combo += 1;
+    this.comboTimer = this.comboTimerMax;
+    const comboMult = Math.max(1, Math.floor(this.combo / 5)); // x2 at 5 kills, x3 at 10, etc.
+    const comboBonus = Math.max(0, this.combo - 1) * 50; // +50 points per kill in combo
 
     const mult = this.player.hasBuff('scoreMultiplier') ? 2 : 1;
-    this.score += enemy.scoreValue * mult;
+    this.score += (enemy.scoreValue * mult + comboBonus) * (1 + comboMult * 0.5);
     this.sessionKills += 1;
     this.killsByType[enemy.type] = (this.killsByType[enemy.type] || 0) + 1;
-    this.sync({ score: this.score });
-    this.emit('kill', { type: enemy.type, weaponKey });
+    this.sync({ score: this.score, combo: this.combo, comboMultiplier: 1 + comboMult * 0.5 });
+    this.emit('kill', { type: enemy.type, weaponKey, combo: this.combo });
 
     enemy.onDeath?.(this);
 
@@ -250,6 +272,10 @@ export class GameEngine {
     this.sound.play('waveComplete');
     this.sound.setIntensity?.(Math.min(1, this.wave / 20));
 
+    // Wave mastery tracking: award stars based on performance
+    const perfectionBonus = this.player.health >= this.waveStartHealth ? 'PERFECT' : null;
+    const noHitBonus = this.player.health === 100 ? 'NO_HIT' : null;
+
     const newlyUnlocked = [];
     for (const key of WEAPON_ORDER) {
       const req = WEAPON_UNLOCK_WAVE[key];
@@ -263,9 +289,10 @@ export class GameEngine {
     this.sync({
       wave: this.wave,
       waveBanner: true,
+      waveMastery: perfectionBonus,
       unlockedWeapons: [...this.unlockedWeapons],
     });
-    this.emit('waveAdvance', { wave: this.wave, newlyUnlocked });
+    this.emit('waveAdvance', { wave: this.wave, newlyUnlocked, perfectionBonus, noHitBonus });
   }
 
   damagePlayer(amount, shakeMagnitude = 6) {
@@ -345,10 +372,26 @@ export class GameEngine {
     // 5. Cleanup
     if (this.enemies.length > 60) this.enemies = this.enemies.filter((e) => e.active);
 
+    // Update combo timer
+    if (this.combo > 0) {
+      this.comboTimer -= dt;
+      if (this.comboTimer <= 0) {
+        this.combo = 0;
+        this.sync({ combo: 0, comboMultiplier: 1 });
+      }
+    }
+
     const secs = Math.ceil(Math.max(...Object.values(this.player.activeBuffs)));
     if (secs !== this._lastBuffSec) {
       this._lastBuffSec = secs;
       this.sync({ buffs: { ...this.player.activeBuffs } });
+    }
+
+    // Sync amplifiers when they change
+    const ampString = JSON.stringify(this.player.amps);
+    if (ampString !== this._lastAmpString) {
+      this._lastAmpString = ampString;
+      this.sync({ amps: { ...this.player.amps } });
     }
 
     // Sync boss health every frame to keep HUD responsive.

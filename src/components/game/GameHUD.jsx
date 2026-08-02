@@ -11,6 +11,20 @@ const BUFF_LABEL = {
   multishot: PICKUP_TYPES.multishot.label,
 };
 
+const AMP_COLORS = {
+  damage: '#FFD700',
+  fire: '#00BFFF',
+  pierce: '#FFB347',
+  multishot: '#FF1493',
+};
+
+const AMP_LABELS = {
+  damage: 'DMG',
+  fire: 'FIRE',
+  pierce: 'PIERCE',
+  multishot: 'MULTI',
+};
+
 export function GameHUD({ hud, mode, fps }) {
   const activeBuffs = Object.entries(hud.buffs || {}).filter(([, v]) => v > 0);
 
@@ -47,6 +61,36 @@ export function GameHUD({ hud, mode, fps }) {
         </div>
       )}
 
+      {hud.amps && Object.values(hud.amps).some((v) => v > 0) && (
+        <div className="sg-amplifiers">
+          {Object.entries(hud.amps).map(([type, count]) => (
+            count > 0 && (
+              <div
+                key={type}
+                className="sg-amplifier-badge"
+                style={{
+                  borderColor: AMP_COLORS[type],
+                  color: AMP_COLORS[type],
+                }}
+              >
+                <span className="sg-amplifier-label">{AMP_LABELS[type]}</span>
+                <span className="sg-amplifier-count">{count}x</span>
+              </div>
+            )
+          ))}
+        </div>
+      )}
+
+      {hud.combo > 0 && (
+        <div className="sg-combo" style={{ '--combo-level': Math.floor(hud.combo / 5) }}>
+          <div className="sg-combo__label">COMBO</div>
+          <div className="sg-combo__count">{hud.combo}</div>
+          {hud.comboMultiplier > 1 && (
+            <div className="sg-combo__mult">×{hud.comboMultiplier.toFixed(1)}</div>
+          )}
+        </div>
+      )}
+
       {hud.boss && (
         <div className="sg-bossbar">
           <div className="sg-hud__stat">{hud.boss.name}</div>
@@ -59,7 +103,17 @@ export function GameHUD({ hud, mode, fps }) {
         </div>
       )}
 
-      {hud.waveBanner && <div className="sg-banner">Wave {hud.wave}</div>}
+      {hud.waveBanner && (
+        <div className="sg-banner">
+          <div>Wave {hud.wave}</div>
+          {hud.waveMastery && (
+            <div className="sg-banner__mastery" data-mastery={hud.waveMastery}>
+              {hud.waveMastery === 'PERFECT' && '⭐ PERFECT WAVE!'}
+              {hud.waveMastery === 'NO_HIT' && '⭐⭐ FLAWLESS!'}
+            </div>
+          )}
+        </div>
+      )}
 
       <WeaponSelector current={hud.weapon} unlocked={hud.unlockedWeapons} />
       {fps != null && <div className="sg-fps">{fps} FPS</div>}

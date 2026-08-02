@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { useAudio } from '../contexts/AudioContext';
 import {
-  DEFAULT_KEYMAP,
-  UI_THEMES,
-  UI_THEME_KEYS,
-  SHIP_DESIGNS,
-  SHIP_DESIGN_KEYS,
   DIFFICULTY_MIN,
   DIFFICULTY_MAX,
+  DIFFICULTY_DESCRIPTIONS,
   difficultyMods,
+  SHIP_DESIGNS,
+  SHIP_DESIGN_KEYS,
 } from '../utils/constants';
 import { THEMES, THEME_GROUPS } from '../canvas/backgroundThemes';
 import soundManager from '../components/audio/SoundManager';
@@ -144,7 +142,7 @@ export function Settings({ onBack }) {
           <>
             <Field
               label={`Difficulty · ${settings.difficultyLevel ?? 4} · ${difficultyMods(settings.difficultyLevel ?? 4).label}`}
-              hint="Scales enemy toughness, squad size, formation speed and how often they shoot."
+              hint={DIFFICULTY_DESCRIPTIONS[settings.difficultyLevel ?? 4]}
             >
               <input
                 className="sg-slider"
