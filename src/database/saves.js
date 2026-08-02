@@ -1,21 +1,20 @@
 import { getDB } from './db';
-
-const SLOT = 'latest';
+import { profileKey } from './profiles';
 
 export async function saveGame(snapshot) {
   const db = await getDB();
   if (!db) return;
-  await db.put('savedGames', { ...snapshot, id: SLOT, timestamp: Date.now() });
+  await db.put('savedGames', { ...snapshot, id: profileKey('latest'), timestamp: Date.now() });
 }
 
 export async function loadLatestSave() {
   const db = await getDB();
   if (!db) return null;
-  return (await db.get('savedGames', SLOT)) || null;
+  return (await db.get('savedGames', profileKey('latest'))) || null;
 }
 
 export async function clearSave() {
   const db = await getDB();
   if (!db) return;
-  await db.delete('savedGames', SLOT);
+  await db.delete('savedGames', profileKey('latest'));
 }

@@ -7,13 +7,16 @@ import Leaderboard from './pages/Leaderboard';
 import Settings from './pages/Settings';
 import Achievements from './pages/Achievements';
 import Stats from './pages/Stats';
+import Profile from './pages/Profile';
+import LevelSelect from './pages/LevelSelect';
 import AchievementToast from './components/game/AchievementToast';
 import './styles/global.css';
 
 function Shell() {
-  const { loaded, refreshAll } = useGame();
+  const { loaded, profile, refreshAll } = useGame();
   const [page, setPage] = useState('menu');
   const [mode, setMode] = useState('campaign');
+  const [startWave, setStartWave] = useState(1);
   const [resumeSnapshot, setResumeSnapshot] = useState(null);
 
   const quitToMenu = () => {
@@ -24,6 +27,8 @@ function Shell() {
 
   if (!loaded) return <div className="sg-panel sg-subtitle">Loading…</div>;
 
+  if (!profile) return <Profile onSignedIn={() => setPage('menu')} />;
+
   return (
     <>
       {page === 'menu' && (
@@ -31,6 +36,7 @@ function Shell() {
           onNavigate={setPage}
           onStart={(m) => {
             setMode(m);
+            setStartWave(1);
             setResumeSnapshot(null);
             setPage('game');
           }}
@@ -41,8 +47,29 @@ function Shell() {
           }}
         />
       )}
+      {page === 'levels' && (
+        <LevelSelect
+          onBack={quitToMenu}
+          onPlayWave={(wave) => {
+            setMode('campaign');
+            setResumeSnapshot(null);
+            setStartWave(wave);
+            setPage('game');
+          }}
+          onContinue={(save) => {
+            setMode(save.mode || 'campaign');
+            setResumeSnapshot(save);
+            setPage('game');
+          }}
+        />
+      )}
       {page === 'game' && (
-        <GamePage mode={mode} resumeSnapshot={resumeSnapshot} onQuit={quitToMenu} />
+        <GamePage
+          mode={mode}
+          startWave={startWave}
+          resumeSnapshot={resumeSnapshot}
+          onQuit={quitToMenu}
+        />
       )}
       {page === 'leaderboard' && <Leaderboard onBack={quitToMenu} />}
       {page === 'settings' && <Settings onBack={quitToMenu} />}

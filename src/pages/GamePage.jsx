@@ -1,7 +1,7 @@
 import GameContainer from '../components/game/GameContainer';
 import { useGame } from '../contexts/GameContext';
 
-export function GamePage({ mode, resumeSnapshot, onQuit }) {
+export function GamePage({ mode, startWave = 1, resumeSnapshot, onQuit }) {
   const { settings, saveSettings } = useGame();
 
   if (!settings.hasSeenOnboarding) {
@@ -28,7 +28,7 @@ export function GamePage({ mode, resumeSnapshot, onQuit }) {
     );
   }
 
-  return <GameContainer mode={mode} resumeSnapshot={resumeSnapshot} onQuit={onQuit} />;
+  return <GameContainer mode={mode} startWave={startWave} resumeSnapshot={resumeSnapshot} onQuit={onQuit} />;
 }
 
 export default GamePage;

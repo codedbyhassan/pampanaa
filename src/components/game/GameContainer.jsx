@@ -10,9 +10,9 @@ import { useTouchControls } from '../../hooks/useTouchControls';
 import { addScore } from '../../database/scores';
 import { saveGame, clearSave } from '../../database/saves';
 import { ACHIEVEMENTS } from '../../utils/achievementDefs';
-import { SHOW_FPS } from '../../utils/constants';
+import { recordWaveCleared } from '../../database/progress';
 
-export function GameContainer({ mode, resumeSnapshot, onQuit }) {
+export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
   const { hud, settings, progress, saveProgress, tryUnlockAchievement, syncFromEngine, setHasSave } = useGame();
   const { resumeAudio } = useAudio();
   const engineRef = useRef(null);
@@ -36,10 +36,10 @@ export function GameContainer({ mode, resumeSnapshot, onQuit }) {
   }, [resumeAudio]);
 
   useEffect(() => {
-    if (!SHOW_FPS) return undefined;
+    if (!settings.showFps) return undefined;
     const id = setInterval(() => setFps(engineRef.current?.fps ?? 0), 500);
     return () => clearInterval(id);
-  }, []);
+  }, [settings.showFps]);
 
   const unlockById = useCallback(
     async (id) => {
@@ -73,7 +73,13 @@ export function GameContainer({ mode, resumeSnapshot, onQuit }) {
         if (wave >= 10 && settings.difficulty === 'hard') unlockById('hard_wave_10');
         const patch = { unlockedWeapons: [...engine.unlockedWeapons] };
         if (wave > (progress.highestWaveReached || 0)) patch.highestWaveReached = wave;
-        saveProgress(patch);
+        await saveProgress(patch);
+        // The wave that just ended is now replayable from the level select.
+        await recordWaveCleared(wave - 1, engine.score);
+        if (settings.autoSave !== false) {
+          await saveGame(engine.snapshot());
+          setHasSave(true);
+        }
       }
       if (name === 'gameOver') {
         setIsBest(payload.wave > (bestWaveRef.current || 0));
@@ -97,7 +103,7 @@ export function GameContainer({ mode, resumeSnapshot, onQuit }) {
         setHasSave(false);
       }
     },
-    [progress, saveProgress, settings.difficulty, setHasSave, unlockById],
+    [progress, saveProgress, settings.autoSave, settings.difficulty, setHasSave, unlockById],
   );
 
   const togglePause = useCallback(() => {
@@ -124,6 +130,7 @@ export function GameContainer({ mode, resumeSnapshot, onQuit }) {
       <GameCanvas
         key={runKey}
         mode={mode}
+        startWave={startWave}
         resumeSnapshot={runKey === 0 ? resumeSnapshot : null}
         paused={paused || gameOver}
         scheme={scheme}
@@ -132,7 +139,7 @@ export function GameContainer({ mode, resumeSnapshot, onQuit }) {
         onEngineEvent={handleEvent}
         onTogglePause={togglePause}
       />
-      <GameHUD hud={hud} mode={mode} fps={SHOW_FPS ? fps : null} />
+      <GameHUD hud={hud} mode={mode} fps={settings.showFps ? fps : null} />
       {scheme === 'touch' && (
         <div className="sg-overlay" style={{ pointerEvents: 'none' }}>
           <TouchControls onMove={touch.setMove} onFire={touch.setFiring} />
