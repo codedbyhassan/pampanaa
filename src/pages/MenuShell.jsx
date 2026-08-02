@@ -36,20 +36,19 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
   };
 
   const NAV = [
-    { id: 'new', label: 'Start New Game', hint: 'Begin a fresh campaign', action: () => begin('campaign') },
+    { id: 'new', label: 'Start New Game', action: () => begin('campaign') },
     {
       id: 'continue',
       label: 'Continue Game',
-      hint: hasSave ? `Resume wave ${progress.highestWaveReached || 1}` : 'No saved run yet',
       action: resume,
       disabled: !hasSave,
     },
-    { id: 'endless', label: 'Endless Mode', hint: 'Survive as long as you can', action: () => begin('endless') },
-    { id: 'levels', label: 'Missions', hint: 'Replay cleared waves' },
-    { id: 'leaderboard', label: 'Leaderboard', hint: 'Best runs on this device' },
-    { id: 'achievements', label: 'Achievements', hint: `${unlockedAchievements.length} unlocked` },
-    { id: 'stats', label: 'Career', hint: 'Lifetime statistics' },
-    { id: 'settings', label: 'Settings', hint: 'Difficulty, audio, controls' },
+    { id: 'endless', label: 'Endless Mode', action: () => begin('endless') },
+    { id: 'levels', label: 'Missions' },
+    { id: 'leaderboard', label: 'Leaderboard' },
+    { id: 'achievements', label: 'Achievements' },
+    { id: 'stats', label: 'Career' },
+    { id: 'settings', label: 'Settings' },
   ];
 
   const select = (item) => {
@@ -78,23 +77,23 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
               onClick={() => select(item)}
             >
               <span className="sg-nav__label">{item.label}</span>
-              <span className="sg-nav__hint">{item.hint}</span>
             </button>
           ))}
         </nav>
 
-        <div className="sg-shell__foot">
-          <div className="sg-shell__player">
-            <span className="sg-nav__hint">Signed in</span>
-            <b>{profile}</b>
-          </div>
-          <button className="sg-btn sg-btn--sm" onClick={signOut}>
-            Switch player
-          </button>
-        </div>
+
       </aside>
 
       <main className="sg-shell__content">
+        <div className="sg-player-header">
+          <div className="sg-player-header__info">
+            <span className="sg-player-header__name">{profile}</span>
+          </div>
+          <button className="sg-btn sg-btn--sm" onClick={signOut}>
+            Switch Player
+          </button>
+        </div>
+
         {section === 'home' && (
           <section className="sg-hero">
             <div className="sg-hero__badge">Campaign ready</div>
