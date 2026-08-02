@@ -825,12 +825,20 @@ body::-webkit-scrollbar,
   right: var(--sg-space-4);
   display: flex;
   align-items: center;
-  gap: var(--sg-space-2);
+  gap: var(--sg-space-3);
   z-index: 100;
 }
 
 .sg-player-header__info {
-  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: var(--sg-space-2);
+}
+
+.sg-player-shooter {
+  display: block;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 0 12px rgba(var(--sg-accent-rgb), 0.3));
 }
 
 .sg-player-header__name {

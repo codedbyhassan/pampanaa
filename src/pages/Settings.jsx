@@ -24,14 +24,14 @@ const BINDINGS = [
 ];
 
 const SECTIONS = [
-  { id: 'profile', label: 'Player', hint: 'Who you are signed in as' },
-  { id: 'gameplay', label: 'Gameplay', hint: 'Difficulty and run behaviour' },
-  { id: 'background', label: 'Backgrounds', hint: 'Ocean, land, city and space' },
-  { id: 'appearance', label: 'Appearance', hint: 'Interface skin and ship hull' },
-  { id: 'audio', label: 'Audio', hint: 'Music, effects and volume' },
-  { id: 'controls', label: 'Controls', hint: 'Scheme and key bindings' },
-  { id: 'access', label: 'Accessibility', hint: 'Contrast, motion and readouts' },
-  { id: 'data', label: 'Data', hint: 'Reset settings, progress and saves' },
+  { id: 'profile', label: 'Player' },
+  { id: 'gameplay', label: 'Gameplay' },
+  { id: 'background', label: 'Backgrounds' },
+  { id: 'appearance', label: 'Appearance' },
+  { id: 'audio', label: 'Audio' },
+  { id: 'controls', label: 'Controls' },
+  { id: 'access', label: 'Accessibility' },
+  { id: 'data', label: 'Data' },
 ];
 
 /** Flat CSS approximation of a parallax theme, used as a picker preview. */
@@ -107,7 +107,6 @@ export function Settings({ onBack }) {
               onClick={() => setSection(s.id)}
             >
               <b>{s.label}</b>
-              <span>{s.hint}</span>
             </button>
           ))}
         </nav>
@@ -119,7 +118,6 @@ export function Settings({ onBack }) {
       <section className="sg-content">
         <header className="sg-content__head">
           <h3>{activeSection.label}</h3>
-          <p className="sg-muted">{activeSection.hint}</p>
         </header>
 
         {section === 'profile' && (

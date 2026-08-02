@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { useAudio } from '../contexts/AudioContext';
 import { loadLatestSave } from '../database/saves';
+import { PlayerShooter } from '../components/ui/PlayerShooter';
 import Leaderboard from './Leaderboard';
 import Settings from './Settings';
 import Achievements from './Achievements';
@@ -85,7 +86,10 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
       <main className="sg-shell__content">
         <div className="sg-player-header">
           <div className="sg-player-header__info">
-            <span className="sg-player-header__name">{profile}</span>
+            <PlayerShooter size={48} />
+            <div>
+              <span className="sg-player-header__name">{profile}</span>
+            </div>
           </div>
           <button className="sg-btn sg-btn--sm" onClick={signOut}>
             Switch Player
