@@ -364,6 +364,97 @@ const SHAPES = {
     ctx.lineWidth = 3;
     ctx.stroke();
   },
+  /** Gear wheel: circle with radial teeth. */
+  gear(ctx, r, color) {
+    ctx.fillStyle = color;
+    const teeth = 9;
+    ctx.beginPath();
+    for (let i = 0; i <= 240; i++) {
+      const t = (i / 240) * Math.PI * 2;
+      const rr = r * (0.78 + 0.22 * (Math.cos(teeth * t) > 0 ? 1 : 0));
+      const px = rr * Math.cos(t);
+      const py = rr * Math.sin(t);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  },
+  /** {7/3} star polygon. */
+  heptagram(ctx, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i <= 7; i++) {
+      const a = ((i * 3) / 7) * Math.PI * 2 - Math.PI / 2;
+      const px = Math.cos(a) * r;
+      const py = Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill('evenodd');
+  },
+  /** Trefoil knot projection. */
+  trefoil(ctx, r, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = r * 0.2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 160; i++) {
+      const t = (i / 160) * Math.PI * 2;
+      const px = (r / 3.2) * (Math.sin(t) + 2 * Math.sin(2 * t));
+      const py = (r / 3.2) * (Math.cos(t) - 2 * Math.cos(2 * t));
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  },
+  /** Epicycloid (five cusps). */
+  epicycloid(ctx, r, color) {
+    ctx.fillStyle = color;
+    parametric(
+      ctx,
+      r / 6,
+      (t, rad) => [
+        rad * (6 * Math.cos(t) - Math.cos(6 * t)),
+        rad * (6 * Math.sin(t) - Math.sin(6 * t)),
+      ],
+      180,
+    );
+    ctx.fill();
+  },
+  /** Hypotrochoid — spirograph rosette. */
+  spirograph(ctx, r, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = r * 0.12;
+    ctx.beginPath();
+    for (let i = 0; i <= 300; i++) {
+      const t = (i / 300) * Math.PI * 6;
+      const px = (r / 1.6) * (Math.cos(t) + 0.6 * Math.cos(3.5 * t));
+      const py = (r / 1.6) * (Math.sin(t) - 0.6 * Math.sin(3.5 * t));
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  },
+  /** Crescent: disc minus an offset disc. */
+  crescent(ctx, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(r * 0.45, -r * 0.2, r * 0.85, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  },
 };
 
 export function drawEnemyShape(ctx, shape, x, y, size, color, rotation = 0) {
