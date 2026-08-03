@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGame } from '../contexts/GameContext';
-import { getWaveConfig } from '../utils/constants';
+import { getWaveConfig, STAGES } from '../utils/constants';
 import { loadLatestSave, clearSave } from '../database/saves';
 
 /**
@@ -14,7 +14,7 @@ export function LevelSelect({ onPlayWave, onContinue, onBack }) {
   const cleared = new Set(progress.clearedWaves || []);
   const highest = Math.max(1, progress.highestWaveReached || 1);
   const maxUnlocked = Math.max(highest, cleared.size ? Math.max(...cleared) + 1 : 1);
-  const waves = Array.from({ length: Math.max(12, maxUnlocked + 2) }, (_, i) => i + 1);
+  const waves = Array.from({ length: Math.max(20, maxUnlocked + 5) }, (_, i) => i + 1);
 
   const resume = async () => {
     setBusy(true);
@@ -56,28 +56,41 @@ export function LevelSelect({ onPlayWave, onContinue, onBack }) {
         )}
       </div>
 
-      <div className="sg-label" style={{ marginBottom: 8 }}>Waves</div>
-      <div className="sg-levelgrid">
-        {waves.map((w) => {
-          const unlocked = w <= maxUnlocked;
-          const done = cleared.has(w);
-          const cfg = getWaveConfig(w);
-          return (
-            <button
-              key={w}
-              className="sg-level"
-              disabled={!unlocked}
-              data-done={done} data-boss={w % 5 === 0}
-              onClick={() => onPlayWave(w)}
-              title={`${cfg.formation} formation · ${cfg.choreography} choreography`}
-            >
-              <b>{w}</b>
-              <span>{w % 5 === 0 ? 'Boss' : cfg.formation}</span>
-              {done && <em>★ {progress.bestScoreByWave?.[w] || 0}</em>}
-            </button>
-          );
-        })}
-      </div>
+      {STAGES.map((stage) => {
+        const to = Math.min(stage.to, waves.length);
+        if (stage.from > waves.length) return null;
+        const stageWaves = waves.filter((w) => w >= stage.from && w <= to);
+        if (!stageWaves.length) return null;
+        return (
+          <div key={stage.id} style={{ marginBottom: 22 }}>
+            <div className="sg-label" style={{ marginBottom: 4 }}>{stage.name}</div>
+            <p className="sg-muted" style={{ margin: '0 0 10px', fontSize: 12 }}>{stage.blurb}</p>
+            <div className="sg-levelgrid">
+              {stageWaves.map((w) => {
+                const unlocked = w <= maxUnlocked;
+                const done = cleared.has(w);
+                const cfg = getWaveConfig(w);
+                return (
+                  <button
+                    key={w}
+                    className="sg-level"
+                    disabled={!unlocked}
+                    data-done={done}
+                    data-boss={w % 5 === 0}
+                    onClick={() => onPlayWave(w)}
+                    title={`${cfg.formation} formation · ${cfg.choreography} choreography`}
+                  >
+                    <b>{w}</b>
+                    <span>{w % 5 === 0 ? 'Boss' : cfg.formation}</span>
+                    {done && <em>★ {progress.bestScoreByWave?.[w] || 0}</em>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
 
       <button className="sg-btn" style={{ width: '100%', marginTop: 20 }} onClick={onBack}>
         Back

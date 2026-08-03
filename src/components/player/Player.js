@@ -20,7 +20,12 @@ export class Player {
     this.angle = -Math.PI / 2;
     this.skin = skin;
     this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0, autoLock: 0, multishot: 0 };
-    this.amps = { damage: 0, fire: 0, pierce: 0, multishot: 0 };
+    /**
+     * Amplifiers are tracked PER WEAPON: a pickup only upgrades the weapon that
+     * was equipped when it was collected, so every gun levels up separately.
+     */
+    this.weaponAmps = {};
+    this.activeWeaponKey = 'blaster';
     this.design = 'interceptor';
     this.tookDamageThisWave = false;
   }
@@ -29,26 +34,51 @@ export class Player {
     return SKINS[this.skin] || SKINS.default;
   }
 
-  addAmp(kind) {
-    this.amps[kind] = (this.amps[kind] || 0) + 1;
+  ampsFor(key = this.activeWeaponKey) {
+    if (!this.weaponAmps[key]) {
+      this.weaponAmps[key] = { damage: 0, fire: 0, pierce: 0, multishot: 0 };
+    }
+    return this.weaponAmps[key];
   }
 
-  /** Stacking amplifier multipliers — every pickup makes bullets hit harder. */
-  get damageMul() {
-    return 1 + this.amps.damage * 0.2;
+  /** Amplifiers of the currently equipped weapon (what the HUD shows). */
+  get amps() {
+    return this.ampsFor(this.activeWeaponKey);
   }
 
-  get fireRateMul() {
-    return 1 + this.amps.fire * 0.15;
+  addAmp(kind, weaponKey = this.activeWeaponKey) {
+    const amps = this.ampsFor(weaponKey);
+    amps[kind] = (amps[kind] || 0) + 1;
+  }
+
+  /** Stacking amplifier multipliers — every pickup makes that gun hit harder. */
+  damageMulFor(key = this.activeWeaponKey) {
+    return 1 + this.ampsFor(key).damage * 0.2;
+  }
+
+  fireRateMulFor(key = this.activeWeaponKey) {
+    return 1 + this.ampsFor(key).fire * 0.15;
   }
 
   /**
    * Multiplier pickups multiply how bullets are fired: every permanent stack
    * adds a barrel, and the timed multi-shot buff doubles the whole spread.
    */
-  get shotMultiplier() {
-    const stacks = Math.min(5, this.amps.multishot || 0);
+  shotMultiplierFor(key = this.activeWeaponKey) {
+    const stacks = Math.min(5, this.ampsFor(key).multishot || 0);
     return (1 + stacks) * (this.hasBuff('multishot') ? 2 : 1);
+  }
+
+  get damageMul() {
+    return this.damageMulFor();
+  }
+
+  get fireRateMul() {
+    return this.fireRateMulFor();
+  }
+
+  get shotMultiplier() {
+    return this.shotMultiplierFor();
   }
 
   hasBuff(name) {

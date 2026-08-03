@@ -17,7 +17,7 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       sandbox: true,
     },
-    icon: path.join(__dirname, '../public/logo.png'),
+    icon: path.join(__dirname, process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
   });
 
   const distPath = path.join(__dirname, '../dist/index.html');
