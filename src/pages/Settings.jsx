@@ -469,7 +469,7 @@ export function Settings({ onBack, backLabel = 'Back to menu', isModal = false }
                 ))}
                 <li>
                   <span>Switch weapon</span>
-                  <b>Scroll · 1–5 · Q/E</b>
+                  <b>Scroll · 1–7 · Q/E</b>
                 </li>
                 <li>
                   <span>Pause</span>
