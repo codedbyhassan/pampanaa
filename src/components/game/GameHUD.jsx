@@ -63,7 +63,11 @@ export function GameHUD({ hud, mode, fps }) {
 
       {hud.amps && Object.values(hud.amps).some((v) => v > 0) && (
         <div className="sg-amplifiers">
+          <div className="sg-amplifier-badge" style={{ borderColor: WEAPON_META[hud.weapon]?.color, color: WEAPON_META[hud.weapon]?.color }}>
+            <span className="sg-amplifier-label">{WEAPON_META[hud.weapon]?.name}</span>
+          </div>
           {Object.entries(hud.amps).map(([type, count]) => (
+
             count > 0 && (
               <div
                 key={type}

@@ -39,6 +39,7 @@ export class GameEngine {
     this.weapons = createWeapons();
     this.unlockedWeapons = [...(progress.unlockedWeapons || ['blaster'])];
     this.currentWeaponKey = 'blaster';
+    this.player.activeWeaponKey = 'blaster';
 
     this.enemies = [];
     this.projectiles = new ObjectPool(() => new Projectile(), PROJECTILE_POOL_SIZE);
@@ -114,6 +115,7 @@ export class GameEngine {
   selectWeapon(key) {
     if (!this.weapons[key] || !this.isUnlocked(key) || key === this.currentWeaponKey) return;
     this.currentWeaponKey = key;
+    this.player.activeWeaponKey = key;
     this.sound.play('unlock');
     this.sync({ weapon: key });
   }
@@ -214,10 +216,16 @@ export class GameEngine {
       this.damageNumbers.spawn(enemy.x, enemy.y - enemy.height / 2, amount);
     }
     if (enemy === this.boss) this.syncBoss();
-    // Heavily amplified rounds set enemies alight and slow their cadence.
-    const amps = this.player.amps || {};
+    // Amplifiers belong to the weapon that fired, so effects are per weapon.
+    const amps = weaponKey && weaponKey !== 'burn' ? this.player.ampsFor(weaponKey) : {};
     if (amps.damage >= 2 && weaponKey !== 'burn') enemy.applyBurn?.(2 + amps.damage, 2.5);
     if (amps.fire >= 3) enemy.applySlow?.(1.6);
+    // Ice rounds chill on every hit and freeze once enough frost stacks.
+    if (weaponKey === 'cryoLance') {
+      const chill = this.pendingChill || 1.6;
+      if (enemy.applyChill) enemy.applyChill(chill);
+      else enemy.applySlow?.(chill);
+    }
     if (!died) {
       this.sound.play('hit');
       // Screen shake on hit scales with damage
@@ -308,7 +316,8 @@ export class GameEngine {
   collectPickup(pickup) {
     pickup.active = false;
     const def = PICKUP_TYPES[pickup.type];
-    def.apply(this.player);
+    // Amplifiers only upgrade the weapon that was equipped on pickup.
+    def.apply(this.player, this.currentWeaponKey);
     this.particles.burst(pickup.x, pickup.y, def.color, 10, 150);
     this.sound.play(def.sound || 'pickup');
     this.sync({
@@ -442,7 +451,7 @@ export class GameEngine {
         y: Math.round(this.player.y),
         health: this.player.health,
         activeBuffs: { ...this.player.activeBuffs },
-        amps: { ...this.player.amps },
+        weaponAmps: JSON.parse(JSON.stringify(this.player.weaponAmps || {})),
       },
       combo: this.combo,
       comboTimer: this.comboTimer,
@@ -459,9 +468,15 @@ export class GameEngine {
     this.player.x = snapshot.player?.x ?? WORLD.width / 2;
     this.player.y = snapshot.player?.y ?? WORLD.height * 0.78;
     this.player.health = snapshot.player?.health ?? this.player.maxHealth;
-    this.player.activeBuffs = { ...snapshot.player?.activeBuffs }; 
-    this.player.amps = { ...snapshot.player?.amps };
+    this.player.activeBuffs = { ...snapshot.player?.activeBuffs };
+    if (snapshot.player?.weaponAmps) {
+      this.player.weaponAmps = JSON.parse(JSON.stringify(snapshot.player.weaponAmps));
+    } else if (snapshot.player?.amps) {
+      // Legacy saves stored one global amplifier set — give it to the blaster.
+      this.player.weaponAmps = { blaster: { ...snapshot.player.amps } };
+    }
     if (snapshot.weapon && this.isUnlocked(snapshot.weapon)) this.currentWeaponKey = snapshot.weapon;
+    this.player.activeWeaponKey = this.currentWeaponKey;
     this.combo = snapshot.combo || 0;
     this.comboTimer = snapshot.comboTimer || 0;
     this.enemies = (snapshot.enemies || []).map((e) => {

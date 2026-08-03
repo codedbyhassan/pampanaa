@@ -96,7 +96,36 @@ export const WAVES = [
   { wave: 16, formation: 'lattice', choreography: 'drift', rows: 3, cols: 9, roster: ['Cogwheel', 'Heptagram', 'Crescent'], fireRateMul: 1.25 },
   { wave: 17, formation: 'wave', choreography: 'carousel', rows: 4, cols: 9, roster: ['Trefoil', 'Epicycle', 'Spirograph'], fireRateMul: 1.3 },
   { wave: 18, formation: 'hourglass', choreography: 'figure8', rows: 4, cols: 9, roster: ['Spirograph', 'Cogwheel', 'Squircle'], fireRateMul: 1.35 },
+  { wave: 19, formation: 'spiral', choreography: 'tide', rows: 4, cols: 9, roster: ['Cardioid', 'Heptagram', 'Tank'], fireRateMul: 1.4 },
+  { wave: 21, formation: 'rings', choreography: 'breathe', rows: 4, cols: 9, roster: ['Crescent', 'Trefoil', 'Splitter'], fireRateMul: 1.42 },
+  { wave: 22, formation: 'columns', choreography: 'pendulum', rows: 4, cols: 9, roster: ['Epicycle', 'Cardioid', 'Torus'], fireRateMul: 1.44 },
+  { wave: 23, formation: 'cross', choreography: 'drift', rows: 4, cols: 9, roster: ['Sierpinski', 'Cogwheel', 'Tank'], fireRateMul: 1.46 },
+  { wave: 24, formation: 'diamond', choreography: 'figure8', rows: 4, cols: 9, roster: ['Spirograph', 'Rosette', 'Splitter'], fireRateMul: 1.48 },
+  { wave: 26, formation: 'orbit', choreography: 'carousel', rows: 4, cols: 9, roster: ['Heptagram', 'Helix', 'Crescent'], fireRateMul: 1.5 },
+  { wave: 27, formation: 'lattice', choreography: 'sway', rows: 4, cols: 9, roster: ['Trefoil', 'Astroid', 'Tank'], fireRateMul: 1.52 },
+  { wave: 28, formation: 'hourglass', choreography: 'tide', rows: 4, cols: 9, roster: ['Cardioid', 'Squircle', 'Epicycle'], fireRateMul: 1.54 },
+  { wave: 29, formation: 'wave', choreography: 'breathe', rows: 4, cols: 9, roster: ['Cogwheel', 'Spirograph', 'Splitter'], fireRateMul: 1.56 },
+  { wave: 31, formation: 'grid', choreography: 'pendulum', rows: 4, cols: 9, roster: ['Crescent', 'Sierpinski', 'Tank'], fireRateMul: 1.58 },
+  { wave: 32, formation: 'spiral', choreography: 'figure8', rows: 4, cols: 9, roster: ['Epicycle', 'Heptagram', 'Rosette'], fireRateMul: 1.6 },
+  { wave: 33, formation: 'rings', choreography: 'drift', rows: 4, cols: 9, roster: ['Spirograph', 'Cardioid', 'Torus'], fireRateMul: 1.62 },
+  { wave: 34, formation: 'cross', choreography: 'carousel', rows: 4, cols: 9, roster: ['Trefoil', 'Cogwheel', 'Tank'], fireRateMul: 1.64 },
 ];
+
+/**
+ * Campaign acts. Each stage is a themed block of waves ending on a boss duel;
+ * the level select groups its grid by these.
+ */
+export const STAGES = [
+  { id: 1, name: 'Act I — Orbital Approach', from: 1, to: 10, blurb: 'Learn the lanes. Light squads, first two bosses.' },
+  { id: 2, name: 'Act II — Debris Corridor', from: 11, to: 20, blurb: 'Denser formations and armoured escorts.' },
+  { id: 3, name: 'Act III — Fracture Belt', from: 21, to: 30, blurb: 'Split-and-swarm patterns with shielded bosses.' },
+  { id: 4, name: 'Act IV — Deep Field', from: 31, to: 40, blurb: 'Full roster, enraged bosses, no mercy.' },
+  { id: 5, name: 'Act V — Endless Drift', from: 41, to: 999, blurb: 'Procedural waves that never stop scaling.' },
+];
+
+export function stageForWave(wave) {
+  return STAGES.find((s) => wave >= s.from && wave <= s.to) || STAGES[STAGES.length - 1];
+}
 
 export function getWaveConfig(wave) {
   const explicit = WAVES.find((w) => w.wave === wave);
@@ -234,4 +263,6 @@ export const WEAPON_UNLOCK_WAVE = {
   laser: 4,
   homingMissile: 6,
   flamethrower: 8,
+  teslaArc: 11,
+  cryoLance: 14,
 };

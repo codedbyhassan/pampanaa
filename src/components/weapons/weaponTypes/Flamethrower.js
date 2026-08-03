@@ -23,17 +23,20 @@ export class Flamethrower extends Weapon {
   }
 
   reach(owner) {
-    return RANGE * (1 + (owner.amps?.fire || 0) * 0.08);
+    return RANGE * (1 + (this.ampsOf(owner).fire || 0) * 0.08);
   }
 
   cone(owner) {
-    return Math.min(1.0, CONE * (1 + ((owner.shotMultiplier || 1) - 1) * 0.35));
+    const mul = owner.shotMultiplierFor?.(this.key) ?? 1;
+    return Math.min(1.0, CONE * (1 + (mul - 1) * 0.35));
   }
 
   fire(engine, owner, angle) {
     const reach = this.reach(owner);
     const cone = this.cone(owner);
-    const dmg = this.damage * (owner.damageMul || 1) * (owner.shotMultiplier || 1);
+    const mul = owner.shotMultiplierFor?.(this.key) ?? 1;
+    const dmg = this.damage * (owner.damageMulFor?.(this.key) ?? 1) * mul;
+
 
     for (const enemy of engine.enemies) {
       if (!enemy.active) continue;
@@ -55,7 +58,7 @@ export class Flamethrower extends Weapon {
     }
 
     // Visual jet: several long-lived particles so the flame visibly spans reach.
-    const jets = 2 + Math.round((owner.shotMultiplier || 1) - 1);
+    const jets = 2 + Math.round(mul - 1);
     for (let i = 0; i < jets; i++) {
       const a = angle + (Math.random() - 0.5) * cone * 2;
       const speed = reach * (1.6 + Math.random() * 0.7);

@@ -11,7 +11,7 @@ export function GamePage({ mode, startWave = 1, resumeSnapshot, onQuit }) {
         <ul className="sg-list">
           <li><span>Move</span><b>WASD / arrows</b></li>
           <li><span>Aim &amp; fire</span><b>Mouse or Space</b></li>
-          <li><span>Switch weapon</span><b>Scroll wheel · 1–5 · Q/E</b></li>
+          <li><span>Switch weapon</span><b>Scroll wheel · 1–7 · Q/E</b></li>
           <li><span>Pause</span><b>Escape</b></li>
         </ul>
         <p className="sg-muted" style={{ margin: 0, lineHeight: 1.7 }}>

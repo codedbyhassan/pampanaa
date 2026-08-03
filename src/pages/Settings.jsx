@@ -4,6 +4,7 @@ import { useAudio } from '../contexts/AudioContext';
 import { PlayerShooter } from '../components/ui/PlayerShooter';
 import {
   DEFAULT_KEYMAP,
+  WEAPON_UNLOCK_WAVE,
   DIFFICULTY_MIN,
   DIFFICULTY_MAX,
   DIFFICULTY_DESCRIPTIONS,
@@ -14,6 +15,12 @@ import {
   UI_THEME_KEYS,
 } from '../utils/constants';
 import { THEMES, THEME_GROUPS } from '../canvas/backgroundThemes';
+import { PICKUP_TYPES, PICKUP_CODEX_ORDER } from '../components/pickups/pickupTypes';
+import {
+  WEAPON_ORDER,
+  WEAPON_META,
+  WEAPON_DESCRIPTIONS,
+} from '../components/weapons/weaponTypes';
 import soundManager from '../components/audio/SoundManager';
 import { resetSettings } from '../database/settings';
 import { resetProgress } from '../database/progress';
@@ -30,6 +37,7 @@ const BINDINGS = [
 const SECTIONS = [
   { id: 'profile', label: 'Player' },
   { id: 'gameplay', label: 'Gameplay' },
+  { id: 'codex', label: 'Codex' },
   { id: 'background', label: 'Backgrounds' },
   { id: 'appearance', label: 'Appearance' },
   { id: 'audio', label: 'Audio' },
@@ -230,6 +238,54 @@ export function Settings({ onBack, backLabel = 'Back to menu', isModal = false }
           </>
         )}
 
+        {section === 'codex' && (
+          <>
+            <Field
+              label="Weapons"
+              hint="Every weapon levels up on its own — an amplifier only upgrades the gun you were holding when you grabbed it."
+            >
+              <ul className="sg-codex">
+                {WEAPON_ORDER.map((key, i) => (
+                  <li key={key} className="sg-codex__row">
+                    <span className="sg-codex__glyph" style={{ color: WEAPON_META[key].color, borderColor: WEAPON_META[key].color }}>
+                      {i + 1}
+                    </span>
+                    <div>
+                      <b style={{ color: WEAPON_META[key].color }}>{WEAPON_META[key].name}</b>
+                      <span className="sg-codex__tag">{WEAPON_META[key].element}</span>
+                      <span className="sg-codex__tag">
+                        {WEAPON_UNLOCK_WAVE[key] ? `Unlocks wave ${WEAPON_UNLOCK_WAVE[key]}` : 'Starter'}
+                      </span>
+                      <p>{WEAPON_DESCRIPTIONS[key]}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Field>
+            <Field label="Pickups" hint="Dropped by destroyed ships and always by bosses.">
+              <ul className="sg-codex">
+                {PICKUP_CODEX_ORDER.map((key) => {
+                  const def = PICKUP_TYPES[key];
+                  return (
+                    <li key={key} className="sg-codex__row">
+                      <span className="sg-codex__glyph" style={{ color: def.color, borderColor: def.color }}>
+                        {def.glyph}
+                      </span>
+                      <div>
+                        <b style={{ color: def.color }}>{def.label}</b>
+                        <span className="sg-codex__tag">
+                          {def.permanent ? 'Permanent · per weapon' : `${def.duration ? `${def.duration}s` : 'Instant'} · ship-wide`}
+                        </span>
+                        <p>{def.description}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Field>
+          </>
+        )}
+
         {section === 'background' && (
           <>
             <Field label="Current selection" hint={bgKey === 'auto' ? 'Rotating through every environment as waves progress.' : THEMES[bgKey].description}>
@@ -413,7 +469,7 @@ export function Settings({ onBack, backLabel = 'Back to menu', isModal = false }
                 ))}
                 <li>
                   <span>Switch weapon</span>
-                  <b>Scroll · 1–5 · Q/E</b>
+                  <b>Scroll · 1–7 · Q/E</b>
                 </li>
                 <li>
                   <span>Pause</span>

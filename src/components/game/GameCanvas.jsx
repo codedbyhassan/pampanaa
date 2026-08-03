@@ -36,7 +36,7 @@ export function GameCanvas({
       }
       if (code === 'KeyQ') return engine.cycleWeapon(-1);
       if (code === 'KeyE') return engine.cycleWeapon(1);
-      const index = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(code);
+      const index = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7'].indexOf(code);
       if (index >= 0) engine.selectWeapon(WEAPON_ORDER[index]);
     },
     [engineRef, onTogglePause],

@@ -1007,3 +1007,126 @@ body::-webkit-scrollbar,
   .sg-credits__dev-item { grid-template-columns: 1fr; }
   .sg-credits__dev-label { display: block; font-size: 11px; margin-bottom: 4px; }
 }
+
+/* ---------- Codex (settings) ---------- */
+.sg-codex { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.sg-codex__row {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 1px solid var(--sg-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.sg-codex__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+  font-weight: 800;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.sg-codex__row b { font-size: 14px; letter-spacing: 0.6px; }
+.sg-codex__row p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.65; color: var(--sg-muted); }
+.sg-codex__tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+  border: 1px solid var(--sg-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  vertical-align: middle;
+}
+
+/* ---------- Title bar v2 (window chrome) ---------- */
+.sg-shell { padding-top: 56px; }
+.sg-titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  min-height: 56px;
+  padding: 0 10px 0 18px;
+  gap: 16px;
+  background: linear-gradient(180deg, rgba(10, 16, 30, 0.96), rgba(8, 12, 24, 0.86));
+  border-bottom: 1px solid rgba(var(--sg-accent-rgb), 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  margin-bottom: 0;
+}
+.sg-shell__titlebar { margin-bottom: 0; }
+.sg-titlebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.sg-titlebar__logo { width: 30px; height: 30px; }
+.sg-titlebar__wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.sg-titlebar__wordmark b {
+  font-size: 13px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--sg-text);
+}
+.sg-titlebar__wordmark span {
+  font-size: 9px;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+}
+.sg-titlebar__spacer { flex: 1; }
+
+/* Grouped, segmented window-control box */
+.sg-winbox {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(8px);
+  -webkit-app-region: no-drag;
+}
+.sg-winbox .sg-titlebar__button {
+  width: 40px;
+  height: 30px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--sg-muted);
+  font-size: 13px;
+  line-height: 1;
+}
+.sg-winbox .sg-titlebar__button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sg-text);
+  transform: none;
+}
+.sg-winbox .sg-titlebar__button--close:hover {
+  background: rgba(255, 70, 70, 0.22);
+  color: #fff;
+}
+.sg-winbox__divider {
+  width: 1px;
+  margin: 5px 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 820px) {
+  .sg-titlebar__wordmark span { display: none; }
+}

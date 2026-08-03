@@ -59,15 +59,42 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
 
   const TitleBar = () => (
     <div className="sg-titlebar sg-shell__titlebar">
-      <img src="./logo.png" alt="App logo" className="sg-titlebar__logo" />
-      <div className="sg-titlebar__controls">
-        <button type="button" className="sg-titlebar__button" onClick={() => window.electron?.window?.minimize?.()}>
-          &#x2013;
+      <div className="sg-titlebar__brand">
+        <img src="./logo.png" alt="" className="sg-titlebar__logo" />
+        <span className="sg-titlebar__wordmark">
+          <b>Pampanaa</b>
+          <span>Lane Defense Command</span>
+        </span>
+      </div>
+      <div className="sg-titlebar__spacer" />
+      <div className="sg-winbox">
+        <button
+          type="button"
+          className="sg-titlebar__button"
+          aria-label="Minimize window"
+          title="Minimize"
+          onClick={() => window.electron?.window?.minimize?.()}
+        >
+          &#9472;
         </button>
-        <button type="button" className="sg-titlebar__button" onClick={() => window.electron?.window?.toggleMaximize?.()}>
-          &#9744;
+        <span className="sg-winbox__divider" />
+        <button
+          type="button"
+          className="sg-titlebar__button"
+          aria-label="Maximize window"
+          title="Maximize"
+          onClick={() => window.electron?.window?.toggleMaximize?.()}
+        >
+          &#9723;
         </button>
-        <button type="button" className="sg-titlebar__button sg-titlebar__button--close" onClick={() => window.electron?.window?.close?.()}>
+        <span className="sg-winbox__divider" />
+        <button
+          type="button"
+          className="sg-titlebar__button sg-titlebar__button--close"
+          aria-label="Close window"
+          title="Close"
+          onClick={() => window.electron?.window?.close?.()}
+        >
           &#10005;
         </button>
       </div>
@@ -76,6 +103,7 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
 
   return (
     <div className="sg-shell">
+      <TitleBar />
       <aside className="sg-shell__nav">
         <nav className="sg-nav">
           {NAV.map((item) => (
@@ -93,7 +121,7 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
       </aside>
 
       <main className="sg-shell__content">
-        {section === 'home' && <TitleBar />}
+
         <div className="sg-player-header">
           <div className="sg-player-header__info">
             <PlayerShooter size={48} shipDesign={settings.shipDesign} />
