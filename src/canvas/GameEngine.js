@@ -186,6 +186,7 @@ export class GameEngine {
 
   startWave() {
     this.waveStarted = true;
+    this.player.tookDamageThisWave = false;
     // Record wave start state for mastery tracking
     this.waveStartHealth = this.player.health;
     this.waveMaxTime = 0;
@@ -273,9 +274,7 @@ export class GameEngine {
     this.sound.play('waveComplete');
     this.sound.setIntensity?.(Math.min(1, this.wave / 20));
 
-    // Wave mastery tracking: award stars based on performance
-    const perfectionBonus = this.player.health >= this.waveStartHealth ? 'PERFECT' : null;
-    const noHitBonus = this.player.health === 100 ? 'NO_HIT' : null;
+    const waveMastery = !this.player.tookDamageThisWave ? 'FLAWLESS' : null;
 
     const newlyUnlocked = [];
     for (const key of WEAPON_ORDER) {
@@ -290,10 +289,10 @@ export class GameEngine {
     this.sync({
       wave: this.wave,
       waveBanner: true,
-      waveMastery: perfectionBonus,
+      waveMastery,
       unlockedWeapons: [...this.unlockedWeapons],
     });
-    this.emit('waveAdvance', { wave: this.wave, newlyUnlocked, perfectionBonus, noHitBonus });
+    this.emit('waveAdvance', { wave: this.wave, newlyUnlocked, waveMastery });
   }
 
   damagePlayer(amount, shakeMagnitude = 6) {
@@ -442,7 +441,11 @@ export class GameEngine {
         x: Math.round(this.player.x),
         y: Math.round(this.player.y),
         health: this.player.health,
+        activeBuffs: { ...this.player.activeBuffs },
+        amps: { ...this.player.amps },
       },
+      combo: this.combo,
+      comboTimer: this.comboTimer,
       enemies: this.enemies
         .filter((e) => e.active && e.type !== 'Boss')
         .map((e) => e.snapshot()),
@@ -456,7 +459,11 @@ export class GameEngine {
     this.player.x = snapshot.player?.x ?? WORLD.width / 2;
     this.player.y = snapshot.player?.y ?? WORLD.height * 0.78;
     this.player.health = snapshot.player?.health ?? this.player.maxHealth;
+    this.player.activeBuffs = { ...snapshot.player?.activeBuffs }; 
+    this.player.amps = { ...snapshot.player?.amps };
     if (snapshot.weapon && this.isUnlocked(snapshot.weapon)) this.currentWeaponKey = snapshot.weapon;
+    this.combo = snapshot.combo || 0;
+    this.comboTimer = snapshot.comboTimer || 0;
     this.enemies = (snapshot.enemies || []).map((e) => {
       const enemy = this.createEnemy(e.type, e.x, e.y);
       enemy.maxHealth = e.maxHealth ?? enemy.maxHealth;
@@ -472,6 +479,10 @@ export class GameEngine {
       wave: this.wave,
       health: this.player.health,
       weapon: this.currentWeaponKey,
+      buffs: { ...this.player.activeBuffs },
+      amps: { ...this.player.amps },
+      combo: this.combo,
+      comboMultiplier: 1 + Math.floor(this.combo / 5) * 0.5,
     });
   }
 }

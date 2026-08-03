@@ -143,8 +143,8 @@ export class Enemy {
 
     if (this.burn > 0) {
       this.burn -= dt;
-      this.health -= this.burnDps * dt;
-      if (this.health <= 0) engine.damageEnemy(this, 0, 'burn');
+      engine.damageEnemy(this, this.burnDps * dt, 'burn');
+      if (!this.active) return;
     }
 
     if (this.mode === 'entering' || this.mode === 'locked') {

@@ -22,6 +22,7 @@ export class Player {
     this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0, autoLock: 0, multishot: 0 };
     this.amps = { damage: 0, fire: 0, pierce: 0, multishot: 0 };
     this.design = 'interceptor';
+    this.tookDamageThisWave = false;
   }
 
   get color() {
@@ -64,6 +65,7 @@ export class Player {
 
   takeDamage(amount) {
     if (!this.active || this.hasBuff('shield')) return false;
+    this.tookDamageThisWave = true;
     this.health = Math.max(0, this.health - amount);
     if (this.health === 0) this.active = false;
     return true;

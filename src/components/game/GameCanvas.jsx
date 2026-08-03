@@ -59,6 +59,7 @@ export function GameCanvas({
       } else {
         const kb = keyboard.read();
         const t = touch.read();
+        if (kb.x || kb.y) aimRef.current = null;
         input = {
           x: kb.x || t.x,
           y: kb.y || t.y,

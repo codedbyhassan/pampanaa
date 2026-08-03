@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { useAudio } from '../contexts/AudioContext';
+import { PlayerShooter } from '../components/ui/PlayerShooter';
 import {
+  DEFAULT_KEYMAP,
   DIFFICULTY_MIN,
   DIFFICULTY_MAX,
   DIFFICULTY_DESCRIPTIONS,
@@ -73,10 +75,13 @@ function Field({ label, hint, children }) {
   );
 }
 
-export function Settings({ onBack }) {
-  const { settings, saveSettings, profile, signOut, progress, refreshAll } = useGame();
+export function Settings({ onBack, backLabel = 'Back to menu', isModal = false }) {
+  const { settings, saveSettings, profile, signOut, progress, refreshAll, renameProfile } = useGame();
   const { volume, setVolume } = useAudio();
   const [rebinding, setRebinding] = useState(null);
+  const [profileName, setProfileName] = useState(profile || '');
+  const [renameError, setRenameError] = useState(null);
+  const [renaming, setRenaming] = useState(false);
   const [section, setSection] = useState('profile');
 
   const captureKey = (action) => {
@@ -90,11 +95,32 @@ export function Settings({ onBack }) {
     window.addEventListener('keydown', handler);
   };
 
+  useEffect(() => {
+    setProfileName(profile || '');
+    setRenameError(null);
+  }, [profile]);
+
+  const handleRenameProfile = async () => {
+    const nextName = profileName.trim();
+    if (!nextName || nextName === profile) return;
+    setRenameError(null);
+    setRenaming(true);
+    try {
+      const result = await renameProfile(nextName);
+      if (!result) throw new Error('Unable to rename profile.');
+      await refreshAll();
+    } catch (error) {
+      setRenameError(error?.message || 'Unable to rename profile.');
+    } finally {
+      setRenaming(false);
+    }
+  };
+
   const bgKey = settings.backgroundTheme || 'auto';
   const activeSection = SECTIONS.find((s) => s.id === section);
 
   return (
-    <div className="sg-settings">
+    <div className={`sg-settings ${isModal ? 'sg-settings--modal' : ''}`}>
       <aside className="sg-side">
         <div className="sg-side__head">
           <h2 className="sg-h2" style={{ margin: 0 }}>Settings</h2>
@@ -113,7 +139,7 @@ export function Settings({ onBack }) {
           ))}
         </nav>
         <button className="sg-btn sg-btn--sm" onClick={onBack}>
-          Back to menu
+          {backLabel}
         </button>
       </aside>
 
@@ -131,6 +157,23 @@ export function Settings({ onBack }) {
                   Best wave {progress.highestWaveReached || 0} · {(progress.clearedWaves || []).length} waves cleared
                 </span>
               </div>
+            </Field>
+            <Field label="Player name" hint="Rename your current profile and keep the active save data.">
+              <div className="sg-field-row">
+                <input
+                  className="sg-input sg-input--wide"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                />
+                <button
+                  className="sg-btn sg-btn--sm"
+                  onClick={handleRenameProfile}
+                  disabled={!profileName.trim() || profileName.trim() === profile || renaming}
+                >
+                  {renaming ? 'Saving...' : 'Rename'}
+                </button>
+              </div>
+              {renameError && <span className="sg-error">{renameError}</span>}
             </Field>
             <Field label="Session" hint="Switching player reloads that profile's world from the local database.">
               <button className="sg-btn" onClick={signOut}>Switch player</button>
@@ -261,16 +304,21 @@ export function Settings({ onBack }) {
                 ))}
               </div>
             </Field>
-            <Field label="Ship design" hint="Each hull is a different silhouette, not just a tint.">
-              <div className="sg-toggle-group">
+            <Field label="Ship design" hint="Select a hull silhouette and preview the active ship in the header.">
+              <div className="sg-ship-grid">
                 {SHIP_DESIGN_KEYS.map((key) => (
                   <button
                     key={key}
-                    className="sg-toggle"
+                    className="sg-ship-card"
                     data-active={(settings.shipDesign || 'interceptor') === key}
                     onClick={() => saveSettings({ shipDesign: key })}
+                    type="button"
                   >
-                    {SHIP_DESIGNS[key].label}
+                    <PlayerShooter shipDesign={key} size={84} />
+                    <div className="sg-ship-card__body">
+                      <b>{SHIP_DESIGNS[key].label}</b>
+                      <span>{SHIP_DESIGNS[key].color}</span>
+                    </div>
                   </button>
                 ))}
               </div>

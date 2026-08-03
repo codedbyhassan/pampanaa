@@ -67,6 +67,54 @@ export async function signIn(name) {
   return record;
 }
 
+export async function renameProfile(newName) {
+  const current = getActiveProfileName();
+  const clean = normaliseName(newName);
+  if (!current || !clean) throw new Error('Profile name must be non-empty.');
+  if (clean === current) return current;
+
+  const db = await getDB();
+  if (!db) throw new Error('Unable to access database.');
+
+  const existing = await db.get('profiles', clean);
+  if (existing) throw new Error('That player name is already taken.');
+
+  const currentRecord = await db.get('profiles', current);
+  if (!currentRecord) throw new Error('Current profile record not found.');
+
+  const nextProfile = { ...currentRecord, name: clean, lastPlayed: Date.now() };
+  await db.put('profiles', nextProfile);
+
+  const currentSettings = await db.get('settings', `${current}::main`);
+  if (currentSettings) {
+    await db.put('settings', { ...currentSettings, key: `${clean}::main` });
+    await db.delete('settings', `${current}::main`).catch(() => {});
+  }
+
+  const currentProgress = await db.get('playerProgress', `${current}::main`);
+  if (currentProgress) {
+    await db.put('playerProgress', { ...currentProgress, key: `${clean}::main` });
+    await db.delete('playerProgress', `${current}::main`).catch(() => {});
+  }
+
+  const currentSave = await db.get('savedGames', `${current}::latest`);
+  if (currentSave) {
+    await db.put('savedGames', { ...currentSave, id: `${clean}::latest` });
+    await db.delete('savedGames', `${current}::latest`).catch(() => {});
+  }
+
+  const achievements = (await db.getAll('achievements')).filter((a) => String(a.id).startsWith(`${current}::`));
+  for (const achievement of achievements) {
+    const id = String(achievement.id).replace(`${current}::`, `${clean}::`);
+    await db.put('achievements', { ...achievement, id });
+    await db.delete('achievements', achievement.id).catch(() => {});
+  }
+
+  await db.delete('profiles', current).catch(() => {});
+  setActiveProfileName(clean);
+  return clean;
+}
+
 export function signOut() {
   setActiveProfileName(null);
 }

@@ -1,33 +1,27 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
 let mainWindow;
 
 // Create main window
-function createWindow() {
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1920,
     height: 1080,
     minWidth: 1024,
     minHeight: 768,
+    frame: false,
+    titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
       sandbox: true,
     },
-    icon: path.join(__dirname, '../assets/icon.png'),
+    icon: path.join(__dirname, '../public/logo.png'),
   });
 
-  const url = isDev
-    ? 'http://localhost:5173'
-    : `file://${path.join(__dirname, '../dist/index.html')}`;
-
-  mainWindow.loadURL(url);
-
-  if (isDev) {
-    mainWindow.webContents.openDevTools();
-  }
+  const distPath = path.join(__dirname, '../dist/index.html');
+  await mainWindow.loadFile(distPath);
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -49,42 +43,16 @@ app.on('activate', () => {
   }
 });
 
-// Menu
-const template = [
-  {
-    label: 'File',
-    submenu: [
-      {
-        label: 'Exit',
-        accelerator: 'CmdOrCtrl+Q',
-        click: () => {
-          app.quit();
-        },
-      },
-    ],
-  },
-  {
-    label: 'View',
-    submenu: [
-      {
-        label: 'Reload',
-        accelerator: 'CmdOrCtrl+R',
-        click: () => {
-          mainWindow?.reload();
-        },
-      },
-      {
-        label: 'Toggle DevTools',
-        accelerator: 'CmdOrCtrl+Shift+I',
-        click: () => {
-          mainWindow?.webContents.toggleDevTools();
-        },
-      },
-    ],
-  },
-];
+Menu.setApplicationMenu(null);
 
-Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+// Window controls
+ipcMain.handle('window-minimize', () => mainWindow?.minimize());
+ipcMain.handle('window-toggle-maximize', () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMaximized()) mainWindow.unmaximize();
+  else mainWindow.maximize();
+});
+ipcMain.handle('window-close', () => mainWindow?.close());
 
 // IPC Handlers
 ipcMain.handle('get-app-version', () => app.getVersion());

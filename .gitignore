@@ -16,6 +16,37 @@ dist-ssr
 .nitro
 *.local
 
+# Build outputs and packaged artifacts
+release/
+build/
+out/
+*.exe
+*.msi
+*.appx
+*.app
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.zip
+*.7z
+*.tar
+*.gz
+*.bz2
+*.xz
+*.blockmap
+*.pak
+*.asar
+
+# Cache and temporary large files
+.cache/
+.vite/
+.parcel-cache/
+coverage/
+.nyc_output/
+.tmp/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

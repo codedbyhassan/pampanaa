@@ -2,7 +2,7 @@
 
 **Pampanaa** is an arcade space shooter with choreographed enemy formations, dynamic difficulty, and procedural environments. Clear waves of enemies, collect power-ups, unlock weapons, and chase your best score. Fully offline—no servers, no accounts, just pure arcade action.
 
-![Pampanaa Menu](docs/screenshots/menu-main.png)
+![Pampanaa Menu](docs/screenshots/main-menu.png)
 
 ---
 

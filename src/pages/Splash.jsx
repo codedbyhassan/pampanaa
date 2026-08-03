@@ -43,7 +43,7 @@ export function Splash({ onDone }) {
   return (
     <div className="sg-splash">
       <div className="sg-splash__stars" aria-hidden="true" />
-      <img src="/logo.png" alt="Pampanaa" className="sg-splash__logo" />
+      <img src="./logo.png" alt="Pampanaa" className="sg-splash__logo" />
       <div className="sg-splash__inner" key={index}>
         <div className="sg-splash__kicker">{slide.kicker}</div>
         <h1 className="sg-splash__title">{slide.title}</h1>
