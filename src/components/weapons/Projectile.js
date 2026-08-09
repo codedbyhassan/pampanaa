@@ -66,15 +66,40 @@ export class Projectile {
 
   draw(ctx) {
     if (!this.active) return;
+    // Rounds are drawn with a dark rim, a saturated body and a white-hot core
+    // so they stay readable over bright nebulae as well as black space.
+    const w = Math.max(9, this.width * 1.6);
+    const h = Math.max(5, this.height * 1.15);
     ctx.save();
-    ctx.fillStyle = this.color;
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 8;
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.atan2(this.vy, this.vx));
-    ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w * 0.9, h * 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = 'rgba(4,8,18,0.85)';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.roundRect(-w / 2, -h / 2, w, h, h / 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.beginPath();
+    ctx.roundRect(-w * 0.28, -h * 0.22, w * 0.56, h * 0.44, h * 0.22);
+    ctx.fill();
     ctx.restore();
   }
+
 }
 
 export default Projectile;

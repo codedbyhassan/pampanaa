@@ -1,72 +1,91 @@
 {
-  "name": "pampanaa",
-  "private": true,
-  "sideEffects": false,
-  "type": "module",
-  "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "preview": "vite preview",
-    "electron": "electron .",
-    "electron-dev": "npm run build && electron .",
-    "electron-build": "npm run build && electron-builder",
-    "lint": "eslint .",
-    "format": "prettier --write ."
-  },
-  "dependencies": {
-    "electron-is-dev": "^2.0.0",
-    "idb": "^8.0.3",
-    "lucide-react": "^0.575.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "sonner": "^2.0.7",
-    "tailwindcss": "^4.2.1"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0",
-    "@vitejs/plugin-react": "^5.2.0",
-    "autoprefixer": "^10.4.16",
-    "electron": "^31.0.0",
-    "electron-builder": "^25.0.0",
-    "postcss": "^8.4.32",
-    "typescript": "^5.8.3",
-    "vite": "^8.1.5",
-    "vite-tsconfig-paths": "^6.0.2"
-  },
-  "main": "public/electron.js",
-  "homepage": "./",
-  "build": {
-    "appId": "com.pampanaa.game",
-    "productName": "Pampanaa",
-    "files": [
-      "dist/**/*",
-      "public/electron.js",
-      "node_modules/**/*"
-    ],
-    "directories": {
-      "buildResources": "assets"
-    },
-    "win": {
-      "target": ["nsis", "portable"],
-      "icon": "assets/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "mac": {
-      "target": ["dmg", "zip"],
-      "icon": "assets/icon.icns",
-      "category": "public.app-category.games"
-    },
-    "linux": {
-      "target": ["AppImage", "deb"],
-      "icon": "assets/icon.png",
-      "category": "Game"
-    }
-  }
+    "name":  "pampanaa",
+    "version":  "0.1.0",
+    "private":  true,
+    "description":  "A desktop lane defense shooter built with React, Vite, and Electron.",
+    "author":  "Pampanaa",
+    "sideEffects":  false,
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "vite dev",
+                    "build":  "vite build",
+                    "build:dev":  "vite build --mode development",
+                    "preview":  "vite preview",
+                    "electron":  "electron .",
+                    "electron-dev":  "npm run build \u0026\u0026 set \"ELECTRON_START_URL=dist/index.html\" \u0026\u0026 electron .",
+                    "electron-build":  "npm run build \u0026\u0026 set \"CSC_IDENTITY_AUTO_DISCOVERY=false\" \u0026\u0026 electron-builder",
+                    "lint":  "eslint .",
+                    "format":  "prettier --write ."
+                },
+    "dependencies":  {
+                         "electron-is-dev":  "^2.0.0",
+                         "idb":  "^8.0.3",
+                         "lucide-react":  "^0.575.0",
+                         "react":  "^19.2.0",
+                         "react-dom":  "^19.2.0",
+                         "sonner":  "^2.0.7",
+                         "tailwindcss":  "^4.2.1"
+                     },
+    "devDependencies":  {
+                            "@types/react":  "^19.2.0",
+                            "@types/react-dom":  "^19.2.0",
+                            "@vitejs/plugin-react":  "^5.2.0",
+                            "autoprefixer":  "^10.4.16",
+                            "electron":  "^31.0.0",
+                            "electron-builder":  "^25.1.8",
+                            "postcss":  "^8.4.32",
+                            "typescript":  "^5.8.3",
+                            "vite":  "^8.1.5",
+                            "vite-tsconfig-paths":  "^6.0.2"
+                        },
+    "main":  "public/electron.cjs",
+    "homepage":  "./",
+    "build":  {
+                  "appId":  "com.pampanaa.game",
+                  "productName":  "Pampanaa",
+                  "files":  [
+                                "dist/**/*",
+                                "public/electron.cjs",
+                                "public/preload.cjs",
+                                "node_modules/**/*"
+                            ],
+                  "directories":  {
+                                      "buildResources":  "assets",
+                                      "output":  "release"
+                                  },
+                  "win":  {
+                              "target":  [
+                                             "nsis",
+                                             "portable"
+                                         ],
+                              "icon":  "public/icon.ico",
+                              "sign":  false,
+                              "signAndEditExecutable":  false
+                          },
+                  "nsis":  {
+                               "oneClick":  false,
+                               "allowToChangeInstallationDirectory":  true,
+                               "createDesktopShortcut":  true,
+                               "createStartMenuShortcut":  true,
+                               "installerIcon":  "public/icon.ico",
+                               "uninstallerIcon":  "public/icon.ico",
+                               "installerHeaderIcon":  "public/icon.ico"
+                           },
+                  "mac":  {
+                              "target":  [
+                                             "dmg",
+                                             "zip"
+                                         ],
+                              "icon":  "assets/icon.icns",
+                              "category":  "public.app-category.games"
+                          },
+                  "linux":  {
+                                "target":  [
+                                               "AppImage",
+                                               "deb"
+                                           ],
+                                "icon":  "assets/icon.png",
+                                "category":  "Game"
+                            }
+              }
 }

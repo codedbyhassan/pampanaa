@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { PLAYER, SKINS } from '../../utils/constants';
 import { drawShip } from '../../canvas/spriteDrawer';
 
-export function PlayerShooter({ shipDesign = 'interceptor', skin = 'default', size = 64 }) {
+export function PlayerShooter({ shipDesign = 'interceptor', skin = 'default', color, size = 64 }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -24,13 +24,13 @@ export function PlayerShooter({ shipDesign = 'interceptor', skin = 'default', si
     const centerX = size / 2;
     const centerY = size / 2;
     const shipSize = size * 0.6;
-    const shipColor = SKINS[skin] || SKINS.default;
+    const shipColor = color || SKINS[skin] || SKINS.default;
 
     drawShip(ctx, centerX, centerY, shipSize, -Math.PI / 2, shipColor, {
       design: shipDesign,
       colorblind: false,
     });
-  }, [shipDesign, skin, size]);
+  }, [shipDesign, skin, color, size]);
 
   return (
     <canvas

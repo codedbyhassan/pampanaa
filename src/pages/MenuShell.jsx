@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { useAudio } from '../contexts/AudioContext';
-import { loadLatestSave } from '../database/saves';
 import { PlayerShooter } from '../components/ui/PlayerShooter';
+import soundManager from '../components/audio/SoundManager';
 import Leaderboard from './Leaderboard';
 import Settings from './Settings';
 import Achievements from './Achievements';
@@ -17,10 +17,18 @@ import Presets from './Presets';
  * for new players so the layout never shifts between sessions.
  */
 export function MenuShell({ onStart, onContinue, onPlayWave }) {
-  const { progress, hasSave, profile, signOut, unlockedAchievements } = useGame();
+  const { progress, hasSave, profile, signOut, unlockedAchievements, settings } = useGame();
   const { resumeAudio } = useAudio();
   const [section, setSection] = useState('home');
   const [busy, setBusy] = useState(false);
+
+  // A continuous generative score runs the whole time the menus are open.
+  useEffect(() => {
+    soundManager.init();
+    soundManager.setIntensity(0.25);
+    soundManager.startMusic('ocean');
+    return () => soundManager.stopMusic();
+  }, []);
 
   const begin = (mode) => {
     resumeAudio();
@@ -58,14 +66,54 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
 
   const activeId = section === 'home' ? null : section;
 
+  const TitleBar = () => (
+    <div className="sg-titlebar sg-shell__titlebar">
+      <div className="sg-titlebar__brand">
+        <img src="./logo.png" alt="" className="sg-titlebar__logo" />
+        <span className="sg-titlebar__wordmark">
+          <b>Pampanaa</b>
+          <span>Lane Defense Command</span>
+        </span>
+      </div>
+      <div className="sg-titlebar__spacer" />
+      <div className="sg-winbox">
+        <button
+          type="button"
+          className="sg-titlebar__button"
+          aria-label="Minimize window"
+          title="Minimize"
+          onClick={() => window.electron?.window?.minimize?.()}
+        >
+          &#9472;
+        </button>
+        <span className="sg-winbox__divider" />
+        <button
+          type="button"
+          className="sg-titlebar__button"
+          aria-label="Maximize window"
+          title="Maximize"
+          onClick={() => window.electron?.window?.toggleMaximize?.()}
+        >
+          &#9723;
+        </button>
+        <span className="sg-winbox__divider" />
+        <button
+          type="button"
+          className="sg-titlebar__button sg-titlebar__button--close"
+          aria-label="Close window"
+          title="Close"
+          onClick={() => window.electron?.window?.close?.()}
+        >
+          &#10005;
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="sg-shell">
+      <TitleBar />
       <aside className="sg-shell__nav">
-        <button className="sg-shell__brand" onClick={() => setSection('home')}>
-          <span className="sg-shell__brandmark">Pampanaa</span>
-          <span className="sg-shell__brandsub">Deep Lane Defence</span>
-        </button>
-
         <nav className="sg-nav">
           {NAV.map((item) => (
             <button
@@ -79,14 +127,23 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
             </button>
           ))}
         </nav>
-
-
       </aside>
 
       <main className="sg-shell__content">
+        {section !== 'home' && (
+          <div className="sg-crumb">
+            <button className="sg-btn sg-btn--sm" onClick={() => setSection('home')}>
+              &larr; Back to command
+            </button>
+            <span className="sg-crumb__here">
+              {NAV.find((n) => n.id === section)?.label || 'Saves'}
+            </span>
+          </div>
+        )}
+
         <div className="sg-player-header">
           <div className="sg-player-header__info">
-            <PlayerShooter size={48} />
+            <PlayerShooter size={48} shipDesign={settings.shipDesign} />
             <div>
               <span className="sg-player-header__name">{profile}</span>
             </div>
@@ -98,7 +155,7 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
 
         {section === 'home' && (
           <section className="sg-hero">
-            <img src="/logo.png" alt="Pampanaa" className="sg-hero__logo" />
+            <img src="./logo.png" alt="Pampanaa" className="sg-hero__logo" />
             <p className="sg-hero__tag">
               Hold the outer lanes against choreographed enemy formations, escalate your
               arsenal, and outlast the capital-class bosses.

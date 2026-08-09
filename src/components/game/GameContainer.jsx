@@ -4,11 +4,13 @@ import GameHUD from './GameHUD';
 import PauseMenu from './PauseMenu';
 import GameOverScreen from './GameOverScreen';
 import TouchControls from './TouchControls';
+import Settings from '../../pages/Settings';
 import { useGame } from '../../contexts/GameContext';
 import { useAudio } from '../../contexts/AudioContext';
 import { useTouchControls } from '../../hooks/useTouchControls';
 import { addScore } from '../../database/scores';
 import { saveGame, clearSave } from '../../database/saves';
+import SaveSlotDialog from './SaveSlotDialog';
 import { ACHIEVEMENTS } from '../../utils/achievementDefs';
 import { recordWaveCleared } from '../../database/progress';
 import { ACHIEVEMENT_THRESHOLDS } from '../../utils/constants';
@@ -18,6 +20,8 @@ export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
   const { resumeAudio } = useAudio();
   const engineRef = useRef(null);
   const [paused, setPaused] = useState(false);
+  const [pauseSettingsOpen, setPauseSettingsOpen] = useState(false);
+  const [saveSnapshot, setSaveSnapshot] = useState(null);
   const [gameOver, setGameOver] = useState(false);
   const [isBest, setIsBest] = useState(false);
   const [runKey, setRunKey] = useState(0);
@@ -114,9 +118,16 @@ export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
     setPaused((p) => !p);
   }, [gameOver]);
 
-  const handleSaveQuit = async () => {
+  // Save & Quit opens the slot picker instead of clobbering a single save.
+  const openSaveSlots = () => {
     const engine = engineRef.current;
-    if (engine) await saveGame(engine.snapshot());
+    if (!engine || engine.boss) return;
+    setSaveSnapshot(engine.snapshot());
+  };
+
+  const commitSave = async () => {
+    if (saveSnapshot) await saveGame(saveSnapshot);
+    setSaveSnapshot(null);
     setHasSave(true);
     onQuit();
   };
@@ -148,8 +159,29 @@ export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
           <TouchControls onMove={touch.setMove} onFire={touch.setFiring} />
         </div>
       )}
-      {paused && !gameOver && (
-        <PauseMenu onResume={() => setPaused(false)} onSaveQuit={handleSaveQuit} onQuit={onQuit} />
+      {paused && !gameOver && !pauseSettingsOpen && !saveSnapshot && (
+        <PauseMenu
+          onResume={() => setPaused(false)}
+          onSaveQuit={openSaveSlots}
+          onQuit={onQuit}
+          onSettings={() => setPauseSettingsOpen(true)}
+          saveDisabled={!!engineRef.current?.boss}
+        />
+      )}
+      {saveSnapshot && (
+        <SaveSlotDialog
+          snapshot={saveSnapshot}
+          defaultName={`Wave ${saveSnapshot.wave || 1} run`}
+          onSaved={commitSave}
+          onCancel={() => setSaveSnapshot(null)}
+        />
+      )}
+      {pauseSettingsOpen && (
+        <div className="sg-modal">
+          <div className="sg-modal__inner sg-modal__inner--wide">
+            <Settings onBack={() => setPauseSettingsOpen(false)} isModal backLabel="Back to pause" />
+          </div>
+        </div>
       )}
       {gameOver && (
         <GameOverScreen

@@ -40,6 +40,8 @@ export class Enemy {
     this.burn = 0;
     this.burnDps = 0;
     this.slow = 0;
+    this.frost = 0;
+    this.freeze = 0;
 
     // Formation state
     this.slot = null;
@@ -71,6 +73,20 @@ export class Enemy {
   applySlow(duration) {
     this.slow = Math.max(this.slow, duration);
   }
+
+  /**
+   * Ice weapons stack frost. Every chill slows the target, and once enough
+   * frost accumulates the enemy freezes solid for a moment.
+   */
+  applyChill(duration) {
+    this.applySlow(duration);
+    this.frost = (this.frost || 0) + duration;
+    if (this.frost >= 4 && this.freeze <= 0) {
+      this.frost = 0;
+      this.freeze = 1.1;
+    }
+  }
+
 
   takeDamage(amount) {
     const reduced = amount * (1 - this.armor);
@@ -137,14 +153,17 @@ export class Enemy {
   update(dt, engine) {
     if (this.contactTimer > 0) this.contactTimer -= dt;
     if (this.slow > 0) this.slow -= dt;
-    const slowMul = this.slow > 0 ? 0.55 : 1;
+    if (this.freeze > 0) this.freeze -= dt;
+    if (this.frost > 0) this.frost = Math.max(0, this.frost - dt * 0.5);
+    // Frozen enemies hold completely still and cannot fire.
+    const slowMul = this.freeze > 0 ? 0 : this.slow > 0 ? 0.55 : 1;
     this.bob += dt * slowMul;
     this.spin += dt * (this.def.motion === 'spin' ? 1.8 : 0.4) * slowMul;
 
     if (this.burn > 0) {
       this.burn -= dt;
-      this.health -= this.burnDps * dt;
-      if (this.health <= 0) engine.damageEnemy(this, 0, 'burn');
+      engine.damageEnemy(this, this.burnDps * dt, 'burn');
+      if (!this.active) return;
     }
 
     if (this.mode === 'entering' || this.mode === 'locked') {
@@ -305,6 +324,18 @@ export class Enemy {
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.width * 0.66, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (this.freeze > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = 'rgba(165, 243, 255, 0.28)';
+      ctx.strokeStyle = '#a5f3ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.width * 0.7, 0, Math.PI * 2);
+      ctx.fill();
       ctx.stroke();
       ctx.restore();
     }

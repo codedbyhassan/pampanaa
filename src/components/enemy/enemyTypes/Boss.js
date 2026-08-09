@@ -87,17 +87,68 @@ export const BOSS_ROSTER = [
     color: '#7bf1ff',
     attacks: ['triangleFan', 'binaryStream'],
   },
+  {
+    name: 'Noether',
+    title: 'Symmetry Engine',
+    glyph: '∂L',
+    shape: 'orbital',
+    color: '#b6ff6b',
+    attacks: ['ringPulse', 'gravityWall'],
+  },
+  {
+    name: 'Fibonacci',
+    title: 'Golden Spiral',
+    glyph: 'φ',
+    shape: 'series',
+    color: '#ffcf6b',
+    attacks: ['spiralArms', 'triangleFan'],
+  },
+  {
+    name: 'Kepler',
+    title: 'Elliptic Choir',
+    glyph: '☉',
+    shape: 'conic',
+    color: '#6bb7ff',
+    attacks: ['gravityWall', 'ringPulse'],
+  },
+  {
+    name: 'Tesla',
+    title: 'Resonant Coil',
+    glyph: '⚡',
+    shape: 'radiant',
+    color: '#9be8ff',
+    attacks: ['binaryStream', 'lightSweep'],
+  },
+  {
+    name: 'Boltzmann',
+    title: 'Entropy Furnace',
+    glyph: 'S=k',
+    shape: 'loom',
+    color: '#ff8a3d',
+    attacks: ['spiralArms', 'volley'],
+  },
+  {
+    name: 'Gödel',
+    title: 'Incompleteness',
+    glyph: '¬□',
+    shape: 'tape',
+    color: '#d0d6e0',
+    attacks: ['lightSweep', 'gravityWall'],
+  },
 ];
 
 export function bossForWave(wave) {
   return BOSS_ROSTER[(Math.floor(wave / 5) - 1 + BOSS_ROSTER.length) % BOSS_ROSTER.length];
 }
 
-const PHASE_TIME = { telegraph: 1.4, attack: 5, vulnerable: 3.6 };
+const PHASE_TIME = { telegraph: 1.4, attack: 6, vulnerable: 2.6 };
+
+/** Bosses are duels of attrition — armoured, layered and slow to fall. */
+const BASE_HEALTH = 1600;
 
 export class Boss {
   constructor(x, y, scale = 1, wave = 5) {
-    const tier = 1 + Math.floor(wave / 5) * 0.5;
+    const tier = 1 + Math.floor(wave / 5) * 0.85;
     const def = bossForWave(wave);
     this.def = def;
     this.type = 'Boss';
@@ -109,7 +160,7 @@ export class Boss {
     this.width = 110;
     this.height = 110;
     this.speed = 150;
-    this.maxHealth = Math.round(700 * scale * tier);
+    this.maxHealth = Math.round(BASE_HEALTH * scale * tier);
     this.health = this.maxHealth;
     this.contactDamage = 20 * scale;
     this.scoreValue = 300 * Math.round(tier);
@@ -129,6 +180,16 @@ export class Boss {
     this.sweep = 0;
     this.burn = 0;
     this.slow = 0;
+    this.frost = 0;
+    this.freeze = 0;
+    /** Second wind: below 40% the boss enrages — faster phases, harder shots. */
+    this.enraged = false;
+    this.shieldLayers = 1 + Math.floor(wave / 10);
+  }
+
+  applyChill(duration) {
+    // Bosses resist freezing outright; ice only slows them.
+    this.applySlow(duration * 0.6);
   }
 
   get vulnerable() {
@@ -154,7 +215,10 @@ export class Boss {
 
   /** Armoured except during the exposed-core window, where hits land double. */
   takeDamage(amount) {
-    const mul = this.vulnerable ? 2 : 0.45;
+    // Armoured except during the exposed-core window. Extra shield layers on
+    // later bosses cut incoming damage further.
+    const layers = 1 + (this.shieldLayers - 1) * 0.18;
+    const mul = (this.vulnerable ? 2.1 : 0.25) / layers;
     this.health -= amount * mul;
     if (this.health <= 0) {
       this.health = 0;
@@ -212,7 +276,13 @@ export class Boss {
     const targetX = WORLD.width / 2 + Math.sin(this.patrol * drift) * WORLD.width * 0.3;
     this.seek(dt, targetX, targetY, 2.5);
 
-    this.phaseTimer -= dt;
+    if (!this.enraged && this.health < this.maxHealth * 0.4) {
+      this.enraged = true;
+      this.speed *= 1.25;
+      engine.sound.play('bossTelegraph');
+    }
+
+    this.phaseTimer -= dt * (this.enraged ? 1.25 : 1);
     if (this.phaseTimer <= 0) this.nextPhase(engine);
     if (this.phase !== 'attack') return;
 
@@ -237,7 +307,7 @@ export class Boss {
   }
 
   runAttack(engine) {
-    const d = this.damageScale;
+    const d = this.damageScale * (this.enraged ? 1.35 : 1);
     switch (this.attack) {
       case 'volley': {
         this.burstTimer = 0.85;

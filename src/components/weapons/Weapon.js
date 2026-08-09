@@ -29,10 +29,15 @@ export class Weapon {
     return 1 / this.fireRate;
   }
 
+  /** Amplifiers are per weapon, so each gun reads only its own upgrades. */
+  ampsOf(owner) {
+    return owner.ampsFor?.(this.key) || owner.amps || {};
+  }
+
   tryFire(engine, owner, angle) {
     if (this.cooldown > 0) return false;
     const rapid = owner.hasBuff?.('rapidFire') ? 0.5 : 1;
-    const amp = owner.fireRateMul || 1;
+    const amp = owner.fireRateMulFor?.(this.key) ?? owner.fireRateMul ?? 1;
     this.cooldown = (this.interval * rapid) / amp;
     this.fire(engine, owner, angle);
     return true;
@@ -40,7 +45,8 @@ export class Weapon {
 
   /** How many barrels this shot fires, after multiplier pickups. */
   shotCount(owner) {
-    return Math.max(1, Math.round(this.projectileCount * (owner.shotMultiplier || 1)));
+    const mul = owner.shotMultiplierFor?.(this.key) ?? owner.shotMultiplier ?? 1;
+    return Math.max(1, Math.round(this.projectileCount * mul));
   }
 
   /** Cone widens with the number of barrels so multiplied fire stays readable. */
@@ -54,15 +60,24 @@ export class Weapon {
   fire(engine, owner, angle) {
     const count = this.shotCount(owner);
     const spread = this.shotSpread(count);
-    const dmgMul = owner.damageMul || 1;
-    const pierce = (owner.amps?.pierce || 0) > 0;
-    const sizeMul = 1 + (owner.amps?.damage || 0) * 0.08;
+    const amps = this.ampsOf(owner);
+    const dmgMul = owner.damageMulFor?.(this.key) ?? owner.damageMul ?? 1;
+    const pierce = (amps.pierce || 0) > 0;
+    const sizeMul = 1 + (amps.damage || 0) * 0.08;
+
+    // Every barrel leaves the ship's nose, not its centre, so fire visually
+    // exits the tip of the hull and then fans out along the aim vector.
+    const nose = owner.noseOffset ?? 18;
+    const facing = typeof owner.angle === 'number' ? owner.angle : angle;
+    const muzzleX = owner.x + Math.cos(facing) * nose;
+    const muzzleY = owner.y + Math.sin(facing) * nose;
+
     for (let i = 0; i < count; i++) {
       const offset = count === 1 ? 0 : (i / (count - 1) - 0.5) * spread;
       const a = angle + offset;
       engine.spawnProjectile({
-        x: owner.x + Math.cos(a) * 18,
-        y: owner.y + Math.sin(a) * 18,
+        x: muzzleX,
+        y: muzzleY,
         vx: Math.cos(a) * this.projectileSpeed,
         vy: Math.sin(a) * this.projectileSpeed,
         width: this.projectileSize * sizeMul,

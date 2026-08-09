@@ -8,6 +8,7 @@ import {
   signIn as signInProfile,
   signOut as signOutProfile,
   touchProfile,
+  renameProfile as renameProfileDB,
 } from '../database/profiles';
 import soundManager from '../components/audio/SoundManager';
 
@@ -98,6 +99,16 @@ export function GameProvider({ children }) {
     return next;
   }, []);
 
+  const renameProfile = useCallback(
+    async (newName) => {
+      const next = await renameProfileDB(newName);
+      if (!next) return null;
+      await refreshAll();
+      return next;
+    },
+    [refreshAll],
+  );
+
   const pushToast = useCallback((achievement) => {
     const id = `${achievement.id}-${Date.now()}`;
     setToasts((prev) => [...prev, { ...achievement, toastId: id }]);
@@ -163,6 +174,7 @@ export function GameProvider({ children }) {
       refreshAll,
       saveSettings,
       saveProgress,
+      renameProfile,
       tryUnlockAchievement,
       pushToast,
       toasts,
