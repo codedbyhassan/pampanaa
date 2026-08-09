@@ -19,7 +19,14 @@ export class Player {
     this.active = true;
     this.angle = -Math.PI / 2;
     this.skin = skin;
-    this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0, autoLock: 0, multishot: 0 };
+    this.activeBuffs = {
+      shield: 0,
+      rapidFire: 0,
+      scoreMultiplier: 0,
+      autoLock: 0,
+      multishot: 0,
+      magnet: 0,
+    };
     /**
      * Amplifiers are tracked PER WEAPON: a pickup only upgrades the weapon that
      * was equipped when it was collected, so every gun levels up separately.
