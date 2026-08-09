@@ -65,12 +65,19 @@ export class Weapon {
     const pierce = (amps.pierce || 0) > 0;
     const sizeMul = 1 + (amps.damage || 0) * 0.08;
 
+    // Every barrel leaves the ship's nose, not its centre, so fire visually
+    // exits the tip of the hull and then fans out along the aim vector.
+    const nose = owner.noseOffset ?? 18;
+    const facing = typeof owner.angle === 'number' ? owner.angle : angle;
+    const muzzleX = owner.x + Math.cos(facing) * nose;
+    const muzzleY = owner.y + Math.sin(facing) * nose;
+
     for (let i = 0; i < count; i++) {
       const offset = count === 1 ? 0 : (i / (count - 1) - 0.5) * spread;
       const a = angle + offset;
       engine.spawnProjectile({
-        x: owner.x + Math.cos(a) * 18,
-        y: owner.y + Math.sin(a) * 18,
+        x: muzzleX,
+        y: muzzleY,
         vx: Math.cos(a) * this.projectileSpeed,
         vy: Math.sin(a) * this.projectileSpeed,
         width: this.projectileSize * sizeMul,
