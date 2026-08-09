@@ -58,6 +58,17 @@ export const PICKUP_TYPES = {
     sound: 'amplify',
     apply: (player) => player.applyBuff('multishot', 10),
   },
+  magnet: {
+    description:
+      'Tractor field for 12 seconds: every pickup on screen abandons its drift and flies straight to you, however far away it is.',
+    label: 'Magnet',
+    color: '#6be5ff',
+    glyph: 'U',
+    duration: 12,
+    sound: 'shieldUp',
+    apply: (player) => player.applyBuff('magnet', 12),
+  },
+
   multishotAmp: {
     description: 'PERMANENT, WEAPON-SPECIFIC: adds one extra barrel to the equipped weapon (max 5). Flame widens its cone, Tesla gains an extra chain jump.',
     label: 'Barrel Multiplier',
