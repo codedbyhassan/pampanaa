@@ -55,6 +55,24 @@ export async function loadPreset(presetId) {
   return (await db.get('savedGames', presetId)) || null;
 }
 
+/** Writes a snapshot over an existing slot, keeping its id and name. */
+export async function overwritePreset(presetId, snapshot) {
+  const db = await getDB();
+  if (!db) return null;
+  const existing = await db.get('savedGames', presetId);
+  if (!existing) return null;
+  const updated = {
+    ...existing,
+    ...snapshot,
+    id: presetId,
+    presetName: existing.presetName,
+    timestamp: Date.now(),
+    isAutoSave: false,
+  };
+  await db.put('savedGames', updated);
+  return updated;
+}
+
 export async function updatePresetName(presetId, newName) {
   const db = await getDB();
   if (!db) return;
@@ -64,6 +82,7 @@ export async function updatePresetName(presetId, newName) {
     await db.put('savedGames', preset);
   }
 }
+
 
 export async function deletePreset(presetId) {
   const db = await getDB();

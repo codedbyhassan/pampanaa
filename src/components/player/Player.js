@@ -19,7 +19,14 @@ export class Player {
     this.active = true;
     this.angle = -Math.PI / 2;
     this.skin = skin;
-    this.activeBuffs = { shield: 0, rapidFire: 0, scoreMultiplier: 0, autoLock: 0, multishot: 0 };
+    this.activeBuffs = {
+      shield: 0,
+      rapidFire: 0,
+      scoreMultiplier: 0,
+      autoLock: 0,
+      multishot: 0,
+      magnet: 0,
+    };
     /**
      * Amplifiers are tracked PER WEAPON: a pickup only upgrades the weapon that
      * was equipped when it was collected, so every gun levels up separately.
@@ -34,12 +41,18 @@ export class Player {
     return SKINS[this.skin] || SKINS.default;
   }
 
+  /** Distance from the ship's centre to the tip of its nose (muzzle point). */
+  get noseOffset() {
+    return this.width * 0.9;
+  }
+
   ampsFor(key = this.activeWeaponKey) {
     if (!this.weaponAmps[key]) {
       this.weaponAmps[key] = { damage: 0, fire: 0, pierce: 0, multishot: 0 };
     }
     return this.weaponAmps[key];
   }
+
 
   /** Amplifiers of the currently equipped weapon (what the HUD shows). */
   get amps() {
@@ -123,12 +136,26 @@ export class Player {
     this.x = Math.max(halfW, Math.min(WORLD.width - halfW, this.x));
     this.y = Math.max(halfH, Math.min(WORLD.height - halfH, this.y));
 
+    /**
+     * Rotation rule: an explicit aim vector wins, otherwise the hull only
+     * *banks* toward the travel direction. Reversing never flips the ship
+     * upside-down — it simply slides backwards while still facing forward.
+     */
+    let target = this.angle;
     if (input.aim && (input.aim.x !== 0 || input.aim.y !== 0)) {
-      this.angle = Math.atan2(input.aim.y - this.y, input.aim.x - this.x);
+      target = Math.atan2(input.aim.y - this.y, input.aim.x - this.x);
     } else if (len > 0.01) {
-      this.angle = Math.atan2(dirY, dirX);
+      target = -Math.PI / 2 + Math.max(-1, Math.min(1, dirX)) * 0.5;
+    } else {
+      target = -Math.PI / 2;
     }
+
+    let diff = target - this.angle;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    this.angle += diff * Math.min(1, dt * 16);
   }
+
 
   draw(ctx, time = 0) {
     if (!this.active) return;

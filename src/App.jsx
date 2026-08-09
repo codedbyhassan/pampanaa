@@ -6,6 +6,7 @@ import MenuShell from './pages/MenuShell';
 import GamePage from './pages/GamePage';
 import Profile from './pages/Profile';
 import AchievementToast from './components/game/AchievementToast';
+import soundManager from './components/audio/SoundManager';
 import './styles/global.css';
 
 const INTRO_KEY = 'pampanaa-intro-seen';
@@ -75,11 +76,20 @@ function Shell() {
   );
 }
 
-/** Applies the selected interface skin to the app root. */
+/**
+ * Applies the selected interface skin to the app root and gives every
+ * interactive control an audible click via one delegated listener.
+ */
 function ThemedRoot({ children }) {
   const { settings } = useGame();
+  const onPointerDown = (e) => {
+    const el = e.target.closest?.('button, .sg-nav__item, .sg-choice, .sg-swatch');
+    if (!el || el.disabled) return;
+    soundManager.init();
+    soundManager.play(el.classList.contains('sg-nav__item') ? 'autolock' : 'ui');
+  };
   return (
-    <div className="sg-root" data-ui-theme={settings.uiTheme || 'nebula'}>
+    <div className="sg-root" data-ui-theme={settings.uiTheme || 'nebula'} onPointerDown={onPointerDown}>
       {children}
     </div>
   );
