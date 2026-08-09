@@ -10,6 +10,7 @@ import { useAudio } from '../../contexts/AudioContext';
 import { useTouchControls } from '../../hooks/useTouchControls';
 import { addScore } from '../../database/scores';
 import { saveGame, clearSave } from '../../database/saves';
+import SaveSlotDialog from './SaveSlotDialog';
 import { ACHIEVEMENTS } from '../../utils/achievementDefs';
 import { recordWaveCleared } from '../../database/progress';
 import { ACHIEVEMENT_THRESHOLDS } from '../../utils/constants';
@@ -20,6 +21,7 @@ export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
   const engineRef = useRef(null);
   const [paused, setPaused] = useState(false);
   const [pauseSettingsOpen, setPauseSettingsOpen] = useState(false);
+  const [saveSnapshot, setSaveSnapshot] = useState(null);
   const [gameOver, setGameOver] = useState(false);
   const [isBest, setIsBest] = useState(false);
   const [runKey, setRunKey] = useState(0);
@@ -116,10 +118,16 @@ export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
     setPaused((p) => !p);
   }, [gameOver]);
 
-  const handleSaveQuit = async () => {
+  // Save & Quit opens the slot picker instead of clobbering a single save.
+  const openSaveSlots = () => {
     const engine = engineRef.current;
     if (!engine || engine.boss) return;
-    await saveGame(engine.snapshot());
+    setSaveSnapshot(engine.snapshot());
+  };
+
+  const commitSave = async () => {
+    if (saveSnapshot) await saveGame(saveSnapshot);
+    setSaveSnapshot(null);
     setHasSave(true);
     onQuit();
   };
@@ -151,13 +159,21 @@ export function GameContainer({ mode, startWave = 1, resumeSnapshot, onQuit }) {
           <TouchControls onMove={touch.setMove} onFire={touch.setFiring} />
         </div>
       )}
-      {paused && !gameOver && !pauseSettingsOpen && (
+      {paused && !gameOver && !pauseSettingsOpen && !saveSnapshot && (
         <PauseMenu
           onResume={() => setPaused(false)}
-          onSaveQuit={handleSaveQuit}
+          onSaveQuit={openSaveSlots}
           onQuit={onQuit}
           onSettings={() => setPauseSettingsOpen(true)}
           saveDisabled={!!engineRef.current?.boss}
+        />
+      )}
+      {saveSnapshot && (
+        <SaveSlotDialog
+          snapshot={saveSnapshot}
+          defaultName={`Wave ${saveSnapshot.wave || 1} run`}
+          onSaved={commitSave}
+          onCancel={() => setSaveSnapshot(null)}
         />
       )}
       {pauseSettingsOpen && (
