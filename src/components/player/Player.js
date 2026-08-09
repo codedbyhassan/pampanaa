@@ -136,12 +136,26 @@ export class Player {
     this.x = Math.max(halfW, Math.min(WORLD.width - halfW, this.x));
     this.y = Math.max(halfH, Math.min(WORLD.height - halfH, this.y));
 
+    /**
+     * Rotation rule: an explicit aim vector wins, otherwise the hull only
+     * *banks* toward the travel direction. Reversing never flips the ship
+     * upside-down — it simply slides backwards while still facing forward.
+     */
+    let target = this.angle;
     if (input.aim && (input.aim.x !== 0 || input.aim.y !== 0)) {
-      this.angle = Math.atan2(input.aim.y - this.y, input.aim.x - this.x);
+      target = Math.atan2(input.aim.y - this.y, input.aim.x - this.x);
     } else if (len > 0.01) {
-      this.angle = Math.atan2(dirY, dirX);
+      target = -Math.PI / 2 + Math.max(-1, Math.min(1, dirX)) * 0.5;
+    } else {
+      target = -Math.PI / 2;
     }
+
+    let diff = target - this.angle;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    this.angle += diff * Math.min(1, dt * 16);
   }
+
 
   draw(ctx, time = 0) {
     if (!this.active) return;
