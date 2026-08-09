@@ -41,12 +41,18 @@ export class Player {
     return SKINS[this.skin] || SKINS.default;
   }
 
+  /** Distance from the ship's centre to the tip of its nose (muzzle point). */
+  get noseOffset() {
+    return this.width * 0.9;
+  }
+
   ampsFor(key = this.activeWeaponKey) {
     if (!this.weaponAmps[key]) {
       this.weaponAmps[key] = { damage: 0, fire: 0, pierce: 0, multishot: 0 };
     }
     return this.weaponAmps[key];
   }
+
 
   /** Amplifiers of the currently equipped weapon (what the HUD shows). */
   get amps() {
