@@ -33,6 +33,11 @@ export class PickupSystem {
   }
 
   update(dt, player) {
+    // A magnet buff turns the whole arena into pull range; otherwise pickups
+    // drift down on their own and only snap in when you get close.
+    const magnet = player?.hasBuff?.('magnet');
+    const radius = magnet ? Number.POSITIVE_INFINITY : PICKUP_MAGNET_RADIUS;
+
     this.pool.forEachActive((p) => {
       p.life -= dt;
 
@@ -40,9 +45,9 @@ export class PickupSystem {
       const dy = player ? player.y - p.y : 0;
       const dist = Math.hypot(dx, dy);
 
-      if (player && dist < PICKUP_MAGNET_RADIUS) {
+      if (player && dist < radius) {
         // Magnet phase: home straight in.
-        const pull = 460;
+        const pull = magnet ? 620 : 460;
         p.x += (dx / (dist || 1)) * pull * dt;
         p.y += (dy / (dist || 1)) * pull * dt;
       } else {
@@ -52,6 +57,7 @@ export class PickupSystem {
         p.x += p.vx * dt;
         p.y += p.vy * dt;
       }
+
 
       p.x = Math.max(14, Math.min(WORLD.width - 14, p.x));
       if (p.life <= 0 || p.y > WORLD.height + 40) p.active = false;
