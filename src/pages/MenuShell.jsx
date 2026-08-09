@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { useAudio } from '../contexts/AudioContext';
 import { PlayerShooter } from '../components/ui/PlayerShooter';
+import soundManager from '../components/audio/SoundManager';
 import Leaderboard from './Leaderboard';
 import Settings from './Settings';
 import Achievements from './Achievements';
@@ -20,6 +21,14 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
   const { resumeAudio } = useAudio();
   const [section, setSection] = useState('home');
   const [busy, setBusy] = useState(false);
+
+  // A continuous generative score runs the whole time the menus are open.
+  useEffect(() => {
+    soundManager.init();
+    soundManager.setIntensity(0.25);
+    soundManager.startMusic('ocean');
+    return () => soundManager.stopMusic();
+  }, []);
 
   const begin = (mode) => {
     resumeAudio();
@@ -121,6 +130,16 @@ export function MenuShell({ onStart, onContinue, onPlayWave }) {
       </aside>
 
       <main className="sg-shell__content">
+        {section !== 'home' && (
+          <div className="sg-crumb">
+            <button className="sg-btn sg-btn--sm" onClick={() => setSection('home')}>
+              &larr; Back to command
+            </button>
+            <span className="sg-crumb__here">
+              {NAV.find((n) => n.id === section)?.label || 'Saves'}
+            </span>
+          </div>
+        )}
 
         <div className="sg-player-header">
           <div className="sg-player-header__info">
