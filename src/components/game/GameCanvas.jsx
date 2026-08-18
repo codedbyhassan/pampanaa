@@ -97,7 +97,7 @@ export function GameCanvas({
       score: runtime.score,
       health: runtime.player.health,
       wave: runtime.wave,
-      weapon: runtime.simulation.currentWeaponKey,
+      weapon: runtime.currentWeaponKey,
       amps: { ...runtime.player.amps },
       unlockedWeapons: [...runtime.unlockedWeapons],
     });
