@@ -18,6 +18,7 @@ export class GameRuntime {
     settings,
     progress,
     mode = 'campaign',
+    mission,
     startWave = 1,
     resumeSnapshot,
     getInput,
@@ -31,6 +32,7 @@ export class GameRuntime {
     this.renderer = new CanvasGameRenderer(canvasContext);
     this.events = new GameEventBus();
     this.encounters = new EncounterRuntime({
+      mission,
       onDomainEvent: (name, payload) => this.events.emit(name, payload),
     });
     this.getInput = getInput;
@@ -54,11 +56,12 @@ export class GameRuntime {
     this.encounters.startSession({
       profileId: progress?.profileId || progress?.id,
       campaignId: mode || 'campaign',
-      missionId: `mission_${startWave}`,
+      missionId: mission?.id || `mission_${startWave}`,
+      chapterId: mission?.chapterId,
     });
     this.encounters.startEncounter({
       id: `encounter_${startWave}`,
-      missionId: `mission_${startWave}`,
+      missionId: mission?.id || `mission_${startWave}`,
       wave: startWave,
     });
 
@@ -128,6 +131,9 @@ export class GameRuntime {
   cycleWeapon(direction) { return this.simulation.cycleWeapon(direction); }
   snapshot() { return this.simulation.snapshot(); }
 
+  get mission() { return this.encounters.mission; }
+  get session() { return this.encounters.session; }
+  get encounter() { return this.encounters.encounter; }
   get fps() { return this.simulation.fps; }
   get status() { return this.simulation.status; }
   get score() { return this.simulation.score; }
