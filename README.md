@@ -34,7 +34,7 @@ The application already provides a substantial playable and persistence foundati
 - Save-game support
 - Achievements
 - Scores and leaderboards
-- Wave-based encounters
+- Wave-based gameplay
 - Enemy and boss systems
 - Pickups and gameplay feedback
 - Difficulty configuration
@@ -100,7 +100,7 @@ These distinctions prevent implementation details from becoming the game's perma
 
 ## Game runtime
 
-**Phase 5 — Runtime Architecture is now implemented.**
+**Phase 5 — Runtime Architecture is implemented.**
 
 The existing monolithic canvas engine remains the gameplay simulation adapter for compatibility, while the responsibilities around it have been extracted into explicit runtime boundaries.
 
@@ -120,39 +120,75 @@ React / input adapters
    (simulation)
 ```
 
-The runtime now owns:
-
-- lifecycle
-- requestAnimationFrame scheduling
-- bounded frame timing
-- input normalization
-- simulation/update ordering
-- rendering ordering
-- pause/resume/stop
-- runtime commands
-- session/encounter bridging
-
-Every frame follows:
-
-```text
-Read input
-   ↓
-Normalize input
-   ↓
-Update simulation
-   ↓
-Process events
-   ↓
-Render
-```
+The runtime now owns lifecycle, frame scheduling, bounded timing, input normalization, simulation/update ordering, rendering ordering, pause/resume/stop and session/encounter bridging.
 
 The React `GameCanvas` no longer owns the high-frequency game loop. It supplies input and presentation context to `GameRuntime`.
 
-See `docs/game/PHASE-5-RUNTIME.md` for the detailed runtime contract.
+## Mission & encounter architecture
+
+**Phase 6 — Mission & Encounter System is implemented.**
+
+Pampanaa now has an explicit gameplay hierarchy:
+
+```text
+Campaign
+   ↓
+Mission
+   ↓
+Objective
+   ↓
+Encounter
+   ↓
+Wave
+   ↓
+Simulation
+   ↓
+Outcome
+```
+
+Missions now own:
+
+- chapter identity
+- mission identity
+- title and description
+- objectives
+- objective completion state
+- encounter references
+- lifecycle timestamps
+
+Mission lifecycle:
+
+```text
+AVAILABLE
+   ↓
+ ACTIVE
+   ↓
+COMPLETED
+   ↘
+   FAILED
+```
+
+Encounter lifecycle remains canonical:
+
+```text
+PENDING
+   ↓
+ ACTIVE
+   ↓
+RESOLVED
+   ↘
+   FAILED
+```
+
+The runtime bridges simulation outcomes into mission/encounter events. Wave progression no longer has to be interpreted as campaign progression by the frontend.
+
+The canvas runtime can receive a mission definition and exposes mission, encounter and session state alongside existing gameplay state.
+
+See `docs/game/PHASE-6-MISSIONS.md` for the mission contract.
 
 ## Game architecture direction
 
-The game is aligned around this product flow:
+The complete product flow is now:
 
 ```text
 Campaign
@@ -176,7 +212,7 @@ Progress / Narrative
 Persistence
 ```
 
-A wave is therefore a runtime encounter mechanism, not the definition of the campaign.
+A wave is a runtime encounter mechanism, not the definition of the campaign.
 
 ## Persistence architecture
 
@@ -224,7 +260,8 @@ docs/game/
 ├── GAME_BIBLE.md
 ├── GAMEPLAY_ALIGNMENT.md
 ├── EXISTING_RUNTIME_MAP.md
-└── PHASE-5-RUNTIME.md
+├── PHASE-5-RUNTIME.md
+└── PHASE-6-MISSIONS.md
 ```
 
 ## Architectural rules
@@ -244,6 +281,8 @@ docs/game/
 13. Story concepts must not be hard-coded into rendering code.
 14. Existing gameplay should be preserved while responsibilities are extracted.
 15. Long-running browser frame gaps must be clamped before reaching simulation.
+16. Missions own objectives and outcomes, not the canvas renderer.
+17. Encounters bridge mission intent to runtime waves.
 
 ## Electron security
 
@@ -285,10 +324,13 @@ bun run electron-build
 - Existing gameplay/domain mapping
 - Game session and encounter application boundary
 - **Phase 5 runtime architecture**
+- **Phase 6 mission and encounter architecture**
+- Mission → encounter → wave runtime bridge
+- Mission state exposed through the game runtime
 
-### Next
+### Current development phase
 
-**Phase 6 — Encounter & Mission System** will move mission and encounter ownership further out of the legacy simulation so gameplay can be driven by explicit mission objectives and campaign state.
+**Phase 7 — Player & Progression System** is the next implementation stage.
 
 Runtime verification remains a release gate: web builds, Electron packaging and persistence migrations must be executed in a real development environment before a release is considered verified.
 
