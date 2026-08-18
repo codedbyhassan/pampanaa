@@ -9,6 +9,7 @@ import GameRuntime from '../../runtime/GameRuntime';
 
 export function GameCanvas({
   mode,
+  mission,
   startWave = 1,
   resumeSnapshot,
   paused,
@@ -81,6 +82,7 @@ export function GameCanvas({
       settings,
       progress,
       mode,
+      mission,
       startWave,
       resumeSnapshot,
       getInput: () => inputProviderRef.current(),
@@ -100,6 +102,9 @@ export function GameCanvas({
       weapon: runtime.currentWeaponKey,
       amps: { ...runtime.player.amps },
       unlockedWeapons: [...runtime.unlockedWeapons],
+      mission: runtime.mission,
+      encounter: runtime.encounter,
+      session: runtime.session,
     });
 
     return () => {
