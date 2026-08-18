@@ -1,32 +1,36 @@
-import { DEFAULT_SETTINGS, getSettings, updateSettings } from '../../database/settings';
-import { DEFAULT_PROGRESS, getProgress, updateProgress } from '../../database/progress';
-import { loadLatestSave } from '../../database/saves';
-import { getUnlockedAchievements, unlockAchievement } from '../../database/achievements';
+import { DEFAULT_SETTINGS } from '../../database/settings';
+import { DEFAULT_PROGRESS } from '../../database/progress';
+import { indexedDbGameStateRepository } from '../../infrastructure/persistence/indexeddb/gameStateRepository';
 
 /**
- * Application service for the player-facing game state.
- * Persistence implementations stay behind this boundary so React contexts
- * coordinate use-cases instead of importing individual database modules.
+ * Application service for player-facing game state.
+ *
+ * React coordinates use-cases through this service. Persistence technology
+ * stays behind the repository contract and can be replaced or mocked.
  */
-export const gameStateService = Object.freeze({
-  defaults: Object.freeze({
-    settings: DEFAULT_SETTINGS,
-    progress: DEFAULT_PROGRESS,
-  }),
+export function createGameStateService(repository = indexedDbGameStateRepository) {
+  return Object.freeze({
+    defaults: Object.freeze({
+      settings: DEFAULT_SETTINGS,
+      progress: DEFAULT_PROGRESS,
+    }),
 
-  async loadSnapshot() {
-    const [settings, progress, achievements, save] = await Promise.all([
-      getSettings(),
-      getProgress(),
-      getUnlockedAchievements(),
-      loadLatestSave(),
-    ]);
+    async loadSnapshot() {
+      const [settings, progress, achievements, save] = await Promise.all([
+        repository.getSettings(),
+        repository.getProgress(),
+        repository.getUnlockedAchievements(),
+        repository.loadLatestSave(),
+      ]);
 
-    return { settings, progress, achievements, hasSave: Boolean(save) };
-  },
+      return { settings, progress, achievements, hasSave: Boolean(save) };
+    },
 
-  updateSettings,
-  updateProgress,
-  getUnlockedAchievements,
-  unlockAchievement,
-});
+    updateSettings: repository.updateSettings,
+    updateProgress: repository.updateProgress,
+    getUnlockedAchievements: repository.getUnlockedAchievements,
+    unlockAchievement: repository.unlockAchievement,
+  });
+}
+
+export const gameStateService = createGameStateService();
