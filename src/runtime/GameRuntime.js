@@ -56,25 +56,21 @@ export class GameRuntime {
       campaignId: mode || 'campaign',
       missionId: `mission_${startWave}`,
     });
+    this.encounters.startEncounter({
+      id: `encounter_${startWave}`,
+      missionId: `mission_${startWave}`,
+      wave: startWave,
+    });
 
     if (resumeSnapshot) this.simulation.restore(resumeSnapshot);
   }
 
-  setContext(context) {
-    this.renderer.setContext(context);
-  }
-
-  setInput(input) {
-    this.input.set(input);
-  }
-
-  resize() {
-    this.simulation.handleResize();
-  }
+  setContext(context) { this.renderer.setContext(context); }
+  setInput(input) { this.input.set(input); }
+  resize() { this.simulation.handleResize(); }
 
   start() {
-    if (this.state === RUNTIME_STATES.RUNNING) return;
-    if (this.state === RUNTIME_STATES.STOPPED) return;
+    if (this.state === RUNTIME_STATES.RUNNING || this.state === RUNTIME_STATES.STOPPED) return;
     this.state = RUNTIME_STATES.RUNNING;
     this.clock.start(this.now());
     this.scheduleFrame();
@@ -88,9 +84,7 @@ export class GameRuntime {
   }
 
   resume() {
-    if (this.state === RUNTIME_STATES.PAUSED || this.state === RUNTIME_STATES.IDLE) {
-      this.start();
-    }
+    if (this.state === RUNTIME_STATES.PAUSED || this.state === RUNTIME_STATES.IDLE) this.start();
   }
 
   stop() {
@@ -99,11 +93,10 @@ export class GameRuntime {
     this.clock.stop();
     this.cancelFrame();
     this.input.reset();
+    this.encounters.end(this.simulation.status === 'gameOver' ? 'failed' : 'completed');
   }
 
-  now() {
-    return globalThis.performance?.now?.() ?? Date.now();
-  }
+  now() { return globalThis.performance?.now?.() ?? Date.now(); }
 
   scheduleFrame() {
     if (this.frameId !== null || this.state !== RUNTIME_STATES.RUNNING) return;
@@ -130,21 +123,10 @@ export class GameRuntime {
     this.renderer.render(this.simulation, dt);
   }
 
-  draw() {
-    this.renderer.render(this.simulation, 0);
-  }
-
-  selectWeapon(key) {
-    return this.simulation.selectWeapon(key);
-  }
-
-  cycleWeapon(direction) {
-    return this.simulation.cycleWeapon(direction);
-  }
-
-  snapshot() {
-    return this.simulation.snapshot();
-  }
+  draw() { this.renderer.render(this.simulation, 0); }
+  selectWeapon(key) { return this.simulation.selectWeapon(key); }
+  cycleWeapon(direction) { return this.simulation.cycleWeapon(direction); }
+  snapshot() { return this.simulation.snapshot(); }
 
   get fps() { return this.simulation.fps; }
   get status() { return this.simulation.status; }
@@ -152,6 +134,7 @@ export class GameRuntime {
   get wave() { return this.simulation.wave; }
   get player() { return this.simulation.player; }
   get boss() { return this.simulation.boss; }
+  get currentWeaponKey() { return this.simulation.currentWeaponKey; }
   get unlockedWeapons() { return this.simulation.unlockedWeapons; }
   get killsByType() { return this.simulation.killsByType; }
   get shotsByWeapon() { return this.simulation.shotsByWeapon; }
