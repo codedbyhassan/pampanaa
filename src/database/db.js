@@ -18,14 +18,14 @@ function ensureIndex(store, name, keyPath, options) {
   if (!store.indexNames.contains(name)) store.createIndex(name, keyPath, options);
 }
 
-function upgradeDatabase(db) {
+function upgradeDatabase(db, transaction) {
   if (!db.objectStoreNames.contains(STORES.SCORES)) {
     const store = db.createObjectStore(STORES.SCORES, { keyPath: 'id', autoIncrement: true });
     ensureIndex(store, 'score', 'score');
     ensureIndex(store, 'mode', 'mode');
     ensureIndex(store, 'profile', 'profile');
   } else {
-    const store = db.transaction.objectStore(STORES.SCORES);
+    const store = transaction.objectStore(STORES.SCORES);
     ensureIndex(store, 'score', 'score');
     ensureIndex(store, 'mode', 'mode');
     ensureIndex(store, 'profile', 'profile');
@@ -44,7 +44,7 @@ function upgradeDatabase(db) {
     ensureIndex(store, 'timestamp', 'timestamp');
     ensureIndex(store, 'profile', 'profile');
   } else {
-    const store = db.transaction.objectStore(STORES.SAVES);
+    const store = transaction.objectStore(STORES.SAVES);
     ensureIndex(store, 'timestamp', 'timestamp');
     ensureIndex(store, 'profile', 'profile');
   }
@@ -59,7 +59,7 @@ function upgradeDatabase(db) {
     const store = db.createObjectStore(STORES.PROFILES, { keyPath: 'name' });
     ensureIndex(store, 'lastPlayed', 'lastPlayed');
   } else {
-    const store = db.transaction.objectStore(STORES.PROFILES);
+    const store = transaction.objectStore(STORES.PROFILES);
     ensureIndex(store, 'lastPlayed', 'lastPlayed');
   }
 }
@@ -69,8 +69,11 @@ export function getDB() {
 
   if (!dbPromise) {
     dbPromise = openDB(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        upgradeDatabase(db);
+      upgrade(db, oldVersion, newVersion, transaction) {
+        upgradeDatabase(db, transaction);
+        if (oldVersion > 0 && newVersion > oldVersion) {
+          console.info(`[Pampanaa] IndexedDB upgraded ${oldVersion} → ${newVersion}.`);
+        }
       },
       blocked() {
         console.warn('[Pampanaa] IndexedDB upgrade is blocked by another open tab/window.');
