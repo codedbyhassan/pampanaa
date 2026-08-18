@@ -6,6 +6,7 @@ export class EncounterRuntime {
   constructor({ onDomainEvent } = {}) {
     this.onDomainEvent = onDomainEvent;
     this.service = createSessionService({ onEvent: (name, payload) => this.emit(name, payload) });
+    this.ended = false;
   }
 
   emit(name, payload) {
@@ -13,17 +14,20 @@ export class EncounterRuntime {
   }
 
   startSession(input) {
+    this.ended = false;
     return this.service.start(input);
   }
 
   startEncounter(input) {
+    if (this.ended) return null;
     return this.service.startEncounter(input);
   }
 
   handleSimulationEvent(name, payload = {}) {
-    if (!WAVE_EVENTS.has(name)) return;
+    if (this.ended || !WAVE_EVENTS.has(name)) return;
 
     if (name === 'waveAdvance') {
+      this.complete();
       this.emit('WAVE_COMPLETED', payload);
       this.startEncounter({
         id: `encounter_${payload.wave}`,
@@ -44,7 +48,7 @@ export class EncounterRuntime {
     }
 
     if (name === 'gameOver') {
-      this.service.end('failed');
+      this.end('failed');
       this.emit('SESSION_FAILED', payload);
     }
   }
@@ -58,6 +62,8 @@ export class EncounterRuntime {
   }
 
   end(outcome = 'completed') {
+    if (this.ended) return this.session;
+    this.ended = true;
     return this.service.end(outcome);
   }
 
