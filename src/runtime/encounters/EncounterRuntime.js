@@ -1,11 +1,14 @@
 import { createSessionService } from '../../application/game/sessionService';
+import { createMissionService } from '../../application/campaign/missionService';
 
 const WAVE_EVENTS = new Set(['waveAdvance', 'bossDefeated', 'kill', 'gameOver']);
 
 export class EncounterRuntime {
-  constructor({ onDomainEvent } = {}) {
+  constructor({ onDomainEvent, mission } = {}) {
     this.onDomainEvent = onDomainEvent;
     this.service = createSessionService({ onEvent: (name, payload) => this.emit(name, payload) });
+    this.missionService = createMissionService({ onEvent: (name, payload) => this.emit(name, payload) });
+    this.missionDefinition = mission;
     this.ended = false;
   }
 
@@ -15,7 +18,15 @@ export class EncounterRuntime {
 
   startSession(input) {
     this.ended = false;
-    return this.service.start(input);
+    const session = this.service.start(input);
+    this.missionService.start(this.missionDefinition ?? {
+      id: input?.missionId,
+      chapterId: input?.chapterId,
+      title: 'The First Watch',
+      description: 'Hold the perimeter while Pampanaa prepares its defenses.',
+      objectives: [{ id: 'hold_perimeter', title: 'Hold the perimeter', completed: false }],
+    });
+    return session;
   }
 
   startEncounter(input) {
@@ -39,6 +50,7 @@ export class EncounterRuntime {
 
     if (name === 'bossDefeated') {
       this.emit('BOSS_DEFEATED', payload);
+      this.missionService.updateObjective('hold_perimeter', { completed: true });
       return;
     }
 
@@ -48,6 +60,7 @@ export class EncounterRuntime {
     }
 
     if (name === 'gameOver') {
+      this.fail();
       this.end('failed');
       this.emit('SESSION_FAILED', payload);
     }
@@ -57,13 +70,16 @@ export class EncounterRuntime {
     return this.service.completeEncounter();
   }
 
-  fail() {
-    return this.service.failEncounter();
+  fail(reason = 'encounter_failed') {
+    const encounter = this.service.failEncounter({ reason });
+    this.missionService.fail(reason);
+    return encounter;
   }
 
   end(outcome = 'completed') {
     if (this.ended) return this.session;
     this.ended = true;
+    if (outcome === 'failed') this.missionService.fail('session_failed');
     return this.service.end(outcome);
   }
 
@@ -73,6 +89,10 @@ export class EncounterRuntime {
 
   get encounter() {
     return this.service.getEncounter();
+  }
+
+  get mission() {
+    return this.missionService.getMission();
   }
 }
 
