@@ -13,6 +13,21 @@ export const DEFAULT_PROGRESSION = Object.freeze({
   unlockedWeapons: [],
 });
 
+const EVENT_REWARDS = Object.freeze({
+  'mission.completed': { key: 'missionsCompleted', experience: 100 },
+  'encounter.resolved': { key: 'encountersResolved', experience: 25 },
+  'enemy.defeated': { key: 'enemiesDefeated', experience: 5 },
+  'boss.defeated': { key: 'bossesDefeated', experience: 50 },
+  'discovery.made': { key: 'discoveries', experience: 75 },
+  'achievement.unlocked': { key: 'achievements', experience: 100 },
+  MISSION_COMPLETED: { key: 'missionsCompleted', experience: 100 },
+  ENCOUNTER_RESOLVED: { key: 'encountersResolved', experience: 25 },
+  ENEMY_DEFEATED: { key: 'enemiesDefeated', experience: 5 },
+  BOSS_DEFEATED: { key: 'bossesDefeated', experience: 50 },
+  DISCOVERY_MADE: { key: 'discoveries', experience: 75 },
+  ACHIEVEMENT_UNLOCKED: { key: 'achievements', experience: 100 },
+});
+
 export function createPlayerProgression(input = {}) {
   return freezeModel({
     profileId: asString(input.profileId),
@@ -42,14 +57,8 @@ export function addExperience(progression, amount) {
 }
 
 export function recordProgressionEvent(progression, event) {
-  const changes = {
-    MISSION_COMPLETED: { missionsCompleted: progression.missionsCompleted + 1, experience: 100 },
-    ENCOUNTER_RESOLVED: { encountersResolved: progression.encountersResolved + 1, experience: 25 },
-    ENEMY_DEFEATED: { enemiesDefeated: progression.enemiesDefeated + 1, experience: 5 },
-    BOSS_DEFEATED: { bossesDefeated: progression.bossesDefeated + 1, experience: 50 },
-    DISCOVERY_MADE: { discoveries: progression.discoveries + 1, experience: 75 },
-    ACHIEVEMENT_UNLOCKED: { achievements: progression.achievements + 1, experience: 100 },
-  }[event?.type];
-  if (!changes) return progression;
-  return addExperience(createPlayerProgression({ ...progression, ...changes }), changes.experience);
+  const reward = EVENT_REWARDS[event?.type];
+  if (!reward) return progression;
+  const count = (progression[reward.key] ?? 0) + 1;
+  return addExperience(createPlayerProgression({ ...progression, [reward.key]: count }), reward.experience);
 }
