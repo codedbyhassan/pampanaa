@@ -1,16 +1,22 @@
-import {
-  getActiveProfileName,
-  renameProfile as renameProfileRecord,
-  signIn as signInProfile,
-  signOut as signOutProfile,
-  touchProfile,
-} from '../../database/profiles';
+import { indexedDbProfileRepository } from '../../infrastructure/persistence/indexeddb/profileRepository';
 
-/** Application-facing profile operations. UI should not know persistence details. */
-export const profileService = Object.freeze({
-  getActiveName: getActiveProfileName,
-  signIn: signInProfile,
-  signOut: signOutProfile,
-  rename: renameProfileRecord,
-  touch: touchProfile,
-});
+/**
+ * Application-facing profile operations.
+ *
+ * Consumers depend on the repository contract, not on IndexedDB modules.
+ * A different persistence adapter can be injected for tests or future sync.
+ */
+export function createProfileService(repository = indexedDbProfileRepository) {
+  return Object.freeze({
+    list: repository.list,
+    get: repository.get,
+    getActiveName: repository.getActiveName,
+    signIn: repository.signIn,
+    signOut: repository.signOut,
+    rename: repository.rename,
+    touch: repository.touch,
+    remove: repository.remove,
+  });
+}
+
+export const profileService = createProfileService();
