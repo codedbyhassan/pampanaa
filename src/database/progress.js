@@ -1,30 +1,8 @@
 import { getDB } from './db';
 import { profileKey } from './profiles';
+import { DEFAULT_PROGRESS } from '../domain/progress/defaultProgress';
 
-export const DEFAULT_PROGRESS = {
-  key: 'main',
-  unlockedWeapons: ['blaster'],
-  unlockedSkins: ['default'],
-  selectedSkin: 'default',
-  highestWaveReached: 0,
-  /** Every wave the player has actually cleared — powers the level select. */
-  clearedWaves: [],
-  bestScoreByWave: {},
-  totalPlayTime: 0,
-  totalEnemiesDefeated: 0,
-  stats: {
-    totalKillsByType: { Chaser: 0, Shooter: 0, Tank: 0, Swarmer: 0, Splitter: 0, Boss: 0 },
-    totalDeaths: 0,
-    gamesPlayed: 0,
-    shotsFiredByWeapon: {
-      blaster: 0,
-      shotgun: 0,
-      laser: 0,
-      homingMissile: 0,
-      flamethrower: 0,
-    },
-  },
-};
+export { DEFAULT_PROGRESS };
 
 export async function getProgress() {
   const db = await getDB();
@@ -57,7 +35,6 @@ export async function updateProgress(patch) {
   return next;
 }
 
-/** Records a cleared wave and its best score for the level-select screen. */
 export async function recordWaveCleared(wave, score = 0) {
   const current = await getProgress();
   const cleared = new Set(current.clearedWaves || []);
