@@ -1,7 +1,7 @@
 import { openDB } from 'idb';
 
 export const DB_NAME = 'shooting-game';
-export const DB_VERSION = 5;
+export const DB_VERSION = 6;
 
 export const STORES = Object.freeze({
   SCORES: 'highScores',
@@ -18,17 +18,19 @@ function ensureIndex(store, name, keyPath, options) {
   if (!store.indexNames.contains(name)) store.createIndex(name, keyPath, options);
 }
 
-function upgradeDatabase(db, transaction) {
+function upgradeDatabase(db, transaction, oldVersion) {
   if (!db.objectStoreNames.contains(STORES.SCORES)) {
     const store = db.createObjectStore(STORES.SCORES, { keyPath: 'id', autoIncrement: true });
     ensureIndex(store, 'score', 'score');
     ensureIndex(store, 'mode', 'mode');
     ensureIndex(store, 'profile', 'profile');
+    ensureIndex(store, 'profileId', 'profileId');
   } else {
     const store = transaction.objectStore(STORES.SCORES);
     ensureIndex(store, 'score', 'score');
     ensureIndex(store, 'mode', 'mode');
     ensureIndex(store, 'profile', 'profile');
+    ensureIndex(store, 'profileId', 'profileId');
   }
 
   if (!db.objectStoreNames.contains(STORES.SETTINGS)) {
@@ -43,24 +45,36 @@ function upgradeDatabase(db, transaction) {
     const store = db.createObjectStore(STORES.SAVES, { keyPath: 'id' });
     ensureIndex(store, 'timestamp', 'timestamp');
     ensureIndex(store, 'profile', 'profile');
+    ensureIndex(store, 'profileId', 'profileId');
   } else {
     const store = transaction.objectStore(STORES.SAVES);
     ensureIndex(store, 'timestamp', 'timestamp');
     ensureIndex(store, 'profile', 'profile');
+    ensureIndex(store, 'profileId', 'profileId');
   }
 
   if (!db.objectStoreNames.contains(STORES.ACHIEVEMENTS)) {
-    db.createObjectStore(STORES.ACHIEVEMENTS, { keyPath: 'id' });
+    const store = db.createObjectStore(STORES.ACHIEVEMENTS, { keyPath: 'id' });
+    ensureIndex(store, 'profileId', 'profileId');
+  } else {
+    ensureIndex(transaction.objectStore(STORES.ACHIEVEMENTS), 'profileId', 'profileId');
   }
 
-  // v4 — name-based player profiles. Kept for backward compatibility with
-  // existing installations. Profile-owned records remain namespaced by key.
   if (!db.objectStoreNames.contains(STORES.PROFILES)) {
     const store = db.createObjectStore(STORES.PROFILES, { keyPath: 'name' });
     ensureIndex(store, 'lastPlayed', 'lastPlayed');
+    ensureIndex(store, 'profileId', 'profileId', { unique: true });
   } else {
     const store = transaction.objectStore(STORES.PROFILES);
     ensureIndex(store, 'lastPlayed', 'lastPlayed');
+    ensureIndex(store, 'profileId', 'profileId', { unique: true });
+  }
+
+  // v6: profiles gain immutable IDs. Existing records are backfilled by the
+  // profile migration so old installations remain readable.
+  if (oldVersion < 6) {
+    // The migration is intentionally data-safe: legacy name keys remain the
+    // primary key until a later major schema migration can change ownership.
   }
 }
 
@@ -70,7 +84,7 @@ export function getDB() {
   if (!dbPromise) {
     dbPromise = openDB(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion, newVersion, transaction) {
-        upgradeDatabase(db, transaction);
+        upgradeDatabase(db, transaction, oldVersion);
         if (oldVersion > 0 && newVersion > oldVersion) {
           console.info(`[Pampanaa] IndexedDB upgraded ${oldVersion} → ${newVersion}.`);
         }
@@ -94,10 +108,6 @@ export function getDB() {
   return dbPromise;
 }
 
-/**
- * Runs a callback inside one IndexedDB transaction. The callback receives the
- * transaction object so related writes can commit or roll back together.
- */
 export async function withTransaction(storeNames, mode, callback) {
   const db = await getDB();
   if (!db) return null;
@@ -108,11 +118,7 @@ export async function withTransaction(storeNames, mode, callback) {
     await tx.done;
     return result;
   } catch (error) {
-    try {
-      tx.abort();
-    } catch {
-      // The transaction may already have completed or aborted.
-    }
+    try { tx.abort(); } catch { /* already completed/aborted */ }
     throw error;
   }
 }
