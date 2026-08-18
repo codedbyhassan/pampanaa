@@ -74,9 +74,9 @@ export class GameRuntime {
 
   start() {
     if (this.state === RUNTIME_STATES.RUNNING) return;
+    if (this.state === RUNTIME_STATES.STOPPED) return;
     this.state = RUNTIME_STATES.RUNNING;
-    const now = globalThis.performance?.now?.() ?? Date.now();
-    this.clock.start(now);
+    this.clock.start(this.now());
     this.scheduleFrame();
   }
 
@@ -88,11 +88,9 @@ export class GameRuntime {
   }
 
   resume() {
-    if (this.state !== RUNTIME_STATES.PAUSED) return;
-    this.state = RUNTIME_STATES.RUNNING;
-    const now = globalThis.performance?.now?.() ?? Date.now();
-    this.clock.start(now);
-    this.scheduleFrame();
+    if (this.state === RUNTIME_STATES.PAUSED || this.state === RUNTIME_STATES.IDLE) {
+      this.start();
+    }
   }
 
   stop() {
@@ -101,6 +99,10 @@ export class GameRuntime {
     this.clock.stop();
     this.cancelFrame();
     this.input.reset();
+  }
+
+  now() {
+    return globalThis.performance?.now?.() ?? Date.now();
   }
 
   scheduleFrame() {
@@ -122,8 +124,7 @@ export class GameRuntime {
   frame(now) {
     if (this.state !== RUNTIME_STATES.RUNNING) return;
     const dt = this.clock.tick(now);
-    const nextInput = this.getInput?.() ?? this.input.read();
-    this.input.set(nextInput);
+    this.input.set(this.getInput?.() ?? this.input.read());
     this.simulation.setInput(this.input.read());
     this.simulation.update(dt);
     this.renderer.render(this.simulation, dt);
@@ -133,49 +134,28 @@ export class GameRuntime {
     this.renderer.render(this.simulation, 0);
   }
 
+  selectWeapon(key) {
+    return this.simulation.selectWeapon(key);
+  }
+
+  cycleWeapon(direction) {
+    return this.simulation.cycleWeapon(direction);
+  }
+
   snapshot() {
     return this.simulation.snapshot();
   }
 
-  get fps() {
-    return this.simulation.fps;
-  }
-
-  get status() {
-    return this.simulation.status;
-  }
-
-  get score() {
-    return this.simulation.score;
-  }
-
-  get wave() {
-    return this.simulation.wave;
-  }
-
-  get player() {
-    return this.simulation.player;
-  }
-
-  get boss() {
-    return this.simulation.boss;
-  }
-
-  get unlockedWeapons() {
-    return this.simulation.unlockedWeapons;
-  }
-
-  get killsByType() {
-    return this.simulation.killsByType;
-  }
-
-  get shotsByWeapon() {
-    return this.simulation.shotsByWeapon;
-  }
-
-  get playTime() {
-    return this.simulation.playTime;
-  }
+  get fps() { return this.simulation.fps; }
+  get status() { return this.simulation.status; }
+  get score() { return this.simulation.score; }
+  get wave() { return this.simulation.wave; }
+  get player() { return this.simulation.player; }
+  get boss() { return this.simulation.boss; }
+  get unlockedWeapons() { return this.simulation.unlockedWeapons; }
+  get killsByType() { return this.simulation.killsByType; }
+  get shotsByWeapon() { return this.simulation.shotsByWeapon; }
+  get playTime() { return this.simulation.playTime; }
 }
 
 export default GameRuntime;
