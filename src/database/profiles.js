@@ -1,5 +1,6 @@
 import { getDB } from './db';
-import { createProfileId, normaliseProfileName } from '../domain/profiles/profile';
+import { createProfile, createProfileId, normaliseProfileName } from '../domain/profiles/profile';
+import { renameProfileModel, touchProfileModel } from '../domain/profiles/profileModel';
 
 const STORAGE_KEY = 'pampanaa.activeProfile';
 const ID_STORAGE_KEY = 'pampanaa.activeProfileId';
@@ -44,7 +45,6 @@ export function setActiveProfileName(name) {
   return setActiveProfile({ name });
 }
 
-/** Stable namespace used by legacy profile-owned records. */
 export function profileKey(suffix = 'main', profileName = getActiveProfileName()) {
   const name = normaliseName(profileName) || 'guest';
   return `${name}${PROFILE_SEPARATOR}${suffix}`;
@@ -68,7 +68,7 @@ async function migrateLegacyProfileIds(db, profiles) {
   const store = tx.objectStore('profiles');
   const migrated = profiles.map((profile) => {
     if (profile.profileId) return profile;
-    const next = { ...profile, profileId: createProfileId() };
+    const next = createProfile(profile);
     store.put(next);
     return next;
   });
@@ -81,7 +81,7 @@ export async function listProfiles() {
   if (!db) return [];
   const all = await db.getAll('profiles');
   const migrated = await migrateLegacyProfileIds(db, all);
-  return migrated.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
+  return migrated.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0)).map(createProfile);
 }
 
 export async function getProfile(name) {
@@ -89,8 +89,8 @@ export async function getProfile(name) {
   if (!db) return null;
   const record = (await db.get('profiles', normaliseName(name))) || null;
   if (!record) return null;
-  if (record.profileId) return record;
-  const migrated = { ...record, profileId: createProfileId() };
+  if (record.profileId) return createProfile(record);
+  const migrated = createProfile(record);
   await db.put('profiles', migrated);
   return migrated;
 }
@@ -98,7 +98,8 @@ export async function getProfile(name) {
 export async function getProfileById(profileId) {
   const db = await getDB();
   if (!db || !profileId) return null;
-  return (await db.getFromIndex('profiles', 'profileId', profileId)) || null;
+  const record = await db.getFromIndex('profiles', 'profileId', profileId);
+  return record ? createProfile(record) : null;
 }
 
 export async function signIn(name) {
@@ -107,13 +108,14 @@ export async function signIn(name) {
 
   const db = await getDB();
   const existing = db ? await getProfile(clean) : null;
-  const record = {
-    profileId: existing?.profileId || createProfileId(),
+  const record = createProfile({
+    ...existing,
     name: clean,
+    profileId: existing?.profileId || createProfileId(),
     createdAt: existing?.createdAt || Date.now(),
     lastPlayed: Date.now(),
     sessions: (existing?.sessions || 0) + 1,
-  };
+  });
 
   if (db) await db.put('profiles', record);
   setActiveProfile(record);
@@ -144,50 +146,53 @@ export async function renameProfile(newName) {
   const saves = tx.objectStore('savedGames');
   const achievements = tx.objectStore('achievements');
   const scores = tx.objectStore('highScores');
+  const stableProfileId = currentRecord.profileId || profileId || createProfileId();
+  const renamed = renameProfileModel({ ...currentRecord, profileId: stableProfileId }, clean);
 
-  await profiles.put({ ...currentRecord, name: clean, profileId: currentRecord.profileId || profileId, lastPlayed: Date.now() });
+  await profiles.put(renamed);
 
   const currentSettings = await settings.get(profileKey('main', current));
   if (currentSettings) {
-    await settings.put({ ...currentSettings, key: profileKey('main', clean), profileId: currentRecord.profileId || profileId });
+    await settings.put({ ...currentSettings, key: profileKey('main', clean), profileId: stableProfileId });
     await settings.delete(profileKey('main', current));
   }
 
   const currentProgress = await progress.get(profileKey('main', current));
   if (currentProgress) {
-    await progress.put({ ...currentProgress, key: profileKey('main', clean), profileId: currentRecord.profileId || profileId });
+    await progress.put({ ...currentProgress, key: profileKey('main', clean), profileId: stableProfileId });
     await progress.delete(profileKey('main', current));
   }
 
   const allSaves = await saves.getAll();
   for (const save of allSaves) {
-    if (save.profileId === (currentRecord.profileId || profileId) || isProfileKey(save.id, current)) {
+    if (save.profileId === stableProfileId || isProfileKey(save.id, current)) {
       const suffix = stripProfileKey(save.id, current);
-      await saves.put({ ...save, id: profileKey(suffix || 'latest', clean), profileId: currentRecord.profileId || profileId, profile: clean });
-      if (save.id !== profileKey(suffix || 'latest', clean)) await saves.delete(save.id);
+      const nextId = profileKey(suffix || 'latest', clean);
+      await saves.put({ ...save, id: nextId, profileId: stableProfileId, profile: clean });
+      if (save.id !== nextId) await saves.delete(save.id);
     }
   }
 
   const allAchievements = await achievements.getAll();
   for (const achievement of allAchievements) {
-    if (achievement.profileId === (currentRecord.profileId || profileId) || isProfileKey(achievement.id, current)) {
+    if (achievement.profileId === stableProfileId || isProfileKey(achievement.id, current)) {
       const suffix = stripProfileKey(achievement.id, current);
       const nextId = profileKey(suffix || achievement.achievementId || 'achievement', clean);
-      await achievements.put({ ...achievement, id: nextId, profileId: currentRecord.profileId || profileId });
+      await achievements.put({ ...achievement, id: nextId, profileId: stableProfileId });
       if (achievement.id !== nextId) await achievements.delete(achievement.id);
     }
   }
 
   const allScores = await scores.getAll();
   for (const score of allScores) {
-    if (score.profileId === (currentRecord.profileId || profileId) || score.profile === current || score.name === current) {
-      await scores.put({ ...score, name: clean, profile: clean, profileId: currentRecord.profileId || profileId });
+    if (score.profileId === stableProfileId || score.profile === current || score.name === current) {
+      await scores.put({ ...score, name: clean, profile: clean, profileId: stableProfileId });
     }
   }
 
   await profiles.delete(current);
   await tx.done;
-  setActiveProfile({ ...currentRecord, name: clean, profileId: currentRecord.profileId || profileId });
+  setActiveProfile(renamed);
   return clean;
 }
 
@@ -200,8 +205,8 @@ export async function touchProfile(patch = {}) {
   if (!name) return null;
   const db = await getDB();
   if (!db) return null;
-  const existing = (await db.get('profiles', name)) || { name, createdAt: Date.now(), sessions: 0 };
-  const next = { ...existing, ...patch, name, profileId: existing.profileId || getActiveProfileId() || createProfileId(), lastPlayed: Date.now() };
+  const existing = (await db.get('profiles', name)) || createProfile({ name, profileId: getActiveProfileId() || createProfileId() });
+  const next = touchProfileModel(existing, patch);
   await db.put('profiles', next);
   setActiveProfile(next);
   return next;
