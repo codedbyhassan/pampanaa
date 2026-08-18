@@ -6,6 +6,7 @@ import MenuShell from './pages/MenuShell';
 import GamePage from './pages/GamePage';
 import Profile from './pages/Profile';
 import AchievementToast from './components/game/AchievementToast';
+import ErrorBoundary from './components/system/ErrorBoundary';
 import soundManager from './components/audio/SoundManager';
 import './styles/global.css';
 
@@ -31,7 +32,7 @@ function Shell() {
     try {
       window.sessionStorage?.setItem(INTRO_KEY, '1');
     } catch {
-      /* storage unavailable — intro simply replays */
+      // Storage can be unavailable in restricted browser contexts.
     }
     setIntro(false);
   };
@@ -44,8 +45,8 @@ function Shell() {
     <>
       {page === 'menu' && (
         <MenuShell
-          onStart={(m) => {
-            setMode(m);
+          onStart={(nextMode) => {
+            setMode(nextMode);
             setStartWave(1);
             setResumeSnapshot(null);
             setPage('game');
@@ -76,18 +77,17 @@ function Shell() {
   );
 }
 
-/**
- * Applies the selected interface skin to the app root and gives every
- * interactive control an audible click via one delegated listener.
- */
 function ThemedRoot({ children }) {
   const { settings } = useGame();
-  const onPointerDown = (e) => {
-    const el = e.target.closest?.('button, .sg-nav__item, .sg-choice, .sg-swatch');
-    if (!el || el.disabled) return;
+
+  const onPointerDown = (event) => {
+    const element = event.target.closest?.('button, .sg-nav__item, .sg-choice, .sg-swatch');
+    if (!element || element.disabled) return;
+
     soundManager.init();
-    soundManager.play(el.classList.contains('sg-nav__item') ? 'autolock' : 'ui');
+    soundManager.play(element.classList.contains('sg-nav__item') ? 'autolock' : 'ui');
   };
+
   return (
     <div className="sg-root" data-ui-theme={settings.uiTheme || 'nebula'} onPointerDown={onPointerDown}>
       {children}
@@ -97,13 +97,15 @@ function ThemedRoot({ children }) {
 
 export function App() {
   return (
-    <GameProvider>
-      <AudioProvider>
-        <ThemedRoot>
-          <Shell />
-        </ThemedRoot>
-      </AudioProvider>
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <AudioProvider>
+          <ThemedRoot>
+            <Shell />
+          </ThemedRoot>
+        </AudioProvider>
+      </GameProvider>
+    </ErrorBoundary>
   );
 }
 
