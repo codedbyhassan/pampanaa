@@ -40,10 +40,10 @@ export function GameCanvas({
         onTogglePause();
         return;
       }
-      if (code === 'KeyQ') return runtime.simulation.cycleWeapon(-1);
-      if (code === 'KeyE') return runtime.simulation.cycleWeapon(1);
+      if (code === 'KeyQ') return runtime.cycleWeapon(-1);
+      if (code === 'KeyE') return runtime.cycleWeapon(1);
       const index = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7'].indexOf(code);
-      if (index >= 0) runtime.simulation.selectWeapon(WEAPON_ORDER[index]);
+      if (index >= 0) runtime.selectWeapon(WEAPON_ORDER[index]);
     },
     [onTogglePause],
   );
@@ -135,7 +135,7 @@ export function GameCanvas({
       const now = performance.now();
       if (now - cooldown < 120) return;
       cooldown = now;
-      runtimeRef.current?.simulation.cycleWeapon(e.deltaY > 0 ? 1 : -1);
+      runtimeRef.current?.cycleWeapon(e.deltaY > 0 ? 1 : -1);
     };
     canvas.addEventListener('wheel', onWheel, { passive: false });
     return () => canvas.removeEventListener('wheel', onWheel);
