@@ -4,7 +4,7 @@ import GameClock from '../src/runtime/clock/GameClock.js';
 import GameInput from '../src/runtime/input/GameInput.js';
 import GameEventBus from '../src/runtime/events/GameEventBus.js';
 
- test('GameClock clamps long frame gaps', () => {
+test('GameClock clamps long frame gaps', () => {
   const clock = new GameClock();
   clock.start(1000);
   assert.equal(clock.tick(1016), 0.016);
