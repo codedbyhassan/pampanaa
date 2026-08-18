@@ -1,19 +1,10 @@
-import { DEFAULT_SETTINGS } from '../../database/settings';
-import { DEFAULT_PROGRESS } from '../../database/progress';
+import { DEFAULT_SETTINGS } from '../../domain/settings/defaultSettings';
+import { DEFAULT_PROGRESS } from '../../domain/progress/defaultProgress';
 import { indexedDbGameStateRepository } from '../../infrastructure/persistence/indexeddb/gameStateRepository';
 
-/**
- * Application service for player-facing game state.
- *
- * React coordinates use-cases through this service. Persistence technology
- * stays behind the repository contract and can be replaced or mocked.
- */
 export function createGameStateService(repository = indexedDbGameStateRepository) {
   return Object.freeze({
-    defaults: Object.freeze({
-      settings: DEFAULT_SETTINGS,
-      progress: DEFAULT_PROGRESS,
-    }),
+    defaults: Object.freeze({ settings: DEFAULT_SETTINGS, progress: DEFAULT_PROGRESS }),
 
     async loadSnapshot() {
       const [settings, progress, achievements, save] = await Promise.all([
@@ -22,7 +13,6 @@ export function createGameStateService(repository = indexedDbGameStateRepository
         repository.getUnlockedAchievements(),
         repository.loadLatestSave(),
       ]);
-
       return { settings, progress, achievements, hasSave: Boolean(save) };
     },
 
