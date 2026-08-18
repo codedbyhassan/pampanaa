@@ -1,7 +1,7 @@
 import { openDB } from 'idb';
 
 export const DB_NAME = 'shooting-game';
-export const DB_VERSION = 6;
+export const DB_VERSION = 7;
 
 export const STORES = Object.freeze({
   SCORES: 'highScores',
@@ -18,63 +18,36 @@ function ensureIndex(store, name, keyPath, options) {
   if (!store.indexNames.contains(name)) store.createIndex(name, keyPath, options);
 }
 
+function ensureStore(db, transaction, name, options = {}) {
+  return db.objectStoreNames.contains(name) ? transaction.objectStore(name) : db.createObjectStore(name, options);
+}
+
 function upgradeDatabase(db, transaction, oldVersion) {
-  if (!db.objectStoreNames.contains(STORES.SCORES)) {
-    const store = db.createObjectStore(STORES.SCORES, { keyPath: 'id', autoIncrement: true });
-    ensureIndex(store, 'score', 'score');
-    ensureIndex(store, 'mode', 'mode');
-    ensureIndex(store, 'profile', 'profile');
-    ensureIndex(store, 'profileId', 'profileId');
-  } else {
-    const store = transaction.objectStore(STORES.SCORES);
-    ensureIndex(store, 'score', 'score');
-    ensureIndex(store, 'mode', 'mode');
-    ensureIndex(store, 'profile', 'profile');
-    ensureIndex(store, 'profileId', 'profileId');
-  }
+  const scores = ensureStore(db, transaction, STORES.SCORES, { keyPath: 'id', autoIncrement: true });
+  ensureIndex(scores, 'score', 'score');
+  ensureIndex(scores, 'mode', 'mode');
+  ensureIndex(scores, 'profile', 'profile');
+  ensureIndex(scores, 'profileId', 'profileId');
 
-  if (!db.objectStoreNames.contains(STORES.SETTINGS)) {
-    db.createObjectStore(STORES.SETTINGS, { keyPath: 'key' });
-  }
+  ensureStore(db, transaction, STORES.SETTINGS, { keyPath: 'key' });
+  ensureStore(db, transaction, STORES.PROGRESS, { keyPath: 'key' });
 
-  if (!db.objectStoreNames.contains(STORES.PROGRESS)) {
-    db.createObjectStore(STORES.PROGRESS, { keyPath: 'key' });
-  }
+  const saves = ensureStore(db, transaction, STORES.SAVES, { keyPath: 'id' });
+  ensureIndex(saves, 'timestamp', 'timestamp');
+  ensureIndex(saves, 'profile', 'profile');
+  ensureIndex(saves, 'profileId', 'profileId');
 
-  if (!db.objectStoreNames.contains(STORES.SAVES)) {
-    const store = db.createObjectStore(STORES.SAVES, { keyPath: 'id' });
-    ensureIndex(store, 'timestamp', 'timestamp');
-    ensureIndex(store, 'profile', 'profile');
-    ensureIndex(store, 'profileId', 'profileId');
-  } else {
-    const store = transaction.objectStore(STORES.SAVES);
-    ensureIndex(store, 'timestamp', 'timestamp');
-    ensureIndex(store, 'profile', 'profile');
-    ensureIndex(store, 'profileId', 'profileId');
-  }
+  const achievements = ensureStore(db, transaction, STORES.ACHIEVEMENTS, { keyPath: 'id' });
+  ensureIndex(achievements, 'profileId', 'profileId');
 
-  if (!db.objectStoreNames.contains(STORES.ACHIEVEMENTS)) {
-    const store = db.createObjectStore(STORES.ACHIEVEMENTS, { keyPath: 'id' });
-    ensureIndex(store, 'profileId', 'profileId');
-  } else {
-    ensureIndex(transaction.objectStore(STORES.ACHIEVEMENTS), 'profileId', 'profileId');
-  }
+  const profiles = ensureStore(db, transaction, STORES.PROFILES, { keyPath: 'name' });
+  ensureIndex(profiles, 'lastPlayed', 'lastPlayed');
+  ensureIndex(profiles, 'profileId', 'profileId', { unique: true });
 
-  if (!db.objectStoreNames.contains(STORES.PROFILES)) {
-    const store = db.createObjectStore(STORES.PROFILES, { keyPath: 'name' });
-    ensureIndex(store, 'lastPlayed', 'lastPlayed');
-    ensureIndex(store, 'profileId', 'profileId', { unique: true });
-  } else {
-    const store = transaction.objectStore(STORES.PROFILES);
-    ensureIndex(store, 'lastPlayed', 'lastPlayed');
-    ensureIndex(store, 'profileId', 'profileId', { unique: true });
-  }
-
-  // v6: profiles gain immutable IDs. Existing records are backfilled by the
-  // profile migration so old installations remain readable.
-  if (oldVersion < 6) {
-    // The migration is intentionally data-safe: legacy name keys remain the
-    // primary key until a later major schema migration can change ownership.
+  if (oldVersion < 7) {
+    // v7 reserves the schema for persistence hardening. Existing key paths are
+    // retained for backwards compatibility while ownership is enforced by
+    // the domain models and adapters.
   }
 }
 
