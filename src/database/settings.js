@@ -1,31 +1,13 @@
 import { getDB } from './db';
 import { profileKey } from './profiles';
 import { DEFAULT_KEYMAP } from '../utils/constants';
+import { DEFAULT_SETTINGS } from '../domain/settings/defaultSettings';
 
-export const DEFAULT_SETTINGS = {
-  key: 'main',
-  volume: 0.5,
-  difficultyLevel: 4,
-  musicEnabled: true,
-  sfxEnabled: true,
-  musicVolume: 0.35,
-  shipDesign: 'interceptor',
-  controlScheme: 'auto',
-  colorblind: false,
-  reducedMotion: false,
-  uiTheme: 'nebula',
-  backgroundTheme: 'auto',
-  showFps: false,
-  screenShake: true,
-  damageNumbers: true,
-  autoSave: true,
-  keymap: { ...DEFAULT_KEYMAP },
-  hasSeenOnboarding: false,
-};
+export { DEFAULT_SETTINGS };
 
 export async function getSettings() {
   const db = await getDB();
-  if (!db) return { ...DEFAULT_SETTINGS };
+  if (!db) return { ...DEFAULT_SETTINGS, keymap: { ...DEFAULT_KEYMAP } };
   const saved = await db.get('settings', profileKey());
   return {
     ...DEFAULT_SETTINGS,
