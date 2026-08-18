@@ -7,6 +7,15 @@ function isOwnedSave(save) {
   return Boolean((profileId && save?.profileId === profileId) || isProfileKey(save?.id));
 }
 
+function hydrateSave(record) {
+  if (!record) return null;
+  return createSave({
+    ...record,
+    profileId: record.profileId || getActiveProfileId(),
+    profile: record.profile || getActiveProfileName(),
+  });
+}
+
 export async function saveGame(snapshot) {
   const db = await getDB();
   if (!db || !getActiveProfileId()) return null;
@@ -23,8 +32,7 @@ export async function saveGame(snapshot) {
 export async function loadLatestSave() {
   const db = await getDB();
   if (!db || !getActiveProfileId()) return null;
-  const save = await db.get('savedGames', profileKey('latest'));
-  return save ? createSave(save) : null;
+  return hydrateSave(await db.get('savedGames', profileKey('latest')));
 }
 
 export async function clearSave() {
@@ -53,14 +61,14 @@ export async function listPresets() {
   return allSaves
     .filter((save) => !save.isAutoSave && isOwnedSave(save))
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-    .map(createSave);
+    .map(hydrateSave);
 }
 
 export async function loadPreset(presetId) {
   const db = await getDB();
   if (!db || !isOwnedSave({ id: presetId, profileId: getActiveProfileId() })) return null;
   const save = await db.get('savedGames', presetId);
-  return save && !save.isAutoSave ? createSave(save) : null;
+  return save && !save.isAutoSave ? hydrateSave(save) : null;
 }
 
 export async function overwritePreset(presetId, snapshot) {
@@ -84,7 +92,11 @@ export async function updatePresetName(presetId, newName) {
   if (!db || !isOwnedSave({ id: presetId, profileId: getActiveProfileId() })) return null;
   const preset = await db.get('savedGames', presetId);
   if (!preset || preset.isAutoSave) return null;
-  const updated = createSave({ ...preset, presetName: normalisePresetName(newName, preset.presetName) });
+  const updated = createSave({
+    ...preset,
+    profileId: preset.profileId || getActiveProfileId(),
+    presetName: normalisePresetName(newName, preset.presetName),
+  });
   await db.put('savedGames', updated);
   return updated;
 }
