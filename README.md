@@ -2,7 +2,7 @@
 
 > **A story-driven sci-fi arcade defense game about protecting the last surviving settlement while uncovering why the world went silent.**
 
-Pampanaa is a React + Vite canvas game packaged for the web and desktop with Electron. The current gameplay foundation is being deliberately refactored into a domain-driven architecture so the game's story, campaign, runtime, progression and persistence evolve as one coherent system.
+Pampanaa is a React + Vite canvas game packaged for the web and desktop with Electron. The gameplay foundation is being deliberately evolved into a domain-driven architecture so the game's story, campaign, runtime, progression and persistence evolve as one coherent system.
 
 ## The game
 
@@ -26,7 +26,7 @@ The story is designed to support immediate arcade gameplay without turning the g
 
 ## Current product foundation
 
-The existing application already provides a substantial playable and persistence foundation:
+The application already provides a substantial playable and persistence foundation:
 
 - Canvas-based arcade runtime
 - Player profiles
@@ -42,35 +42,33 @@ The existing application already provides a substantial playable and persistence
 - Missions, career, achievements, leaderboard and codex surfaces
 - Electron desktop packaging
 
-The current runtime is being preserved during the architecture migration. The goal is **not** to throw away working gameplay and rebuild blindly. The goal is to give existing mechanics proper ownership and meaning.
+The current gameplay is being preserved during the architecture migration. The goal is **not** to throw away working gameplay and rebuild blindly. The goal is to give existing mechanics proper ownership and meaning.
 
-## Current architecture work
+## Architecture
 
-The repository has been through a foundational architecture refactor covering the application, domain and persistence boundaries.
+The repository now has explicit domain, application, runtime and infrastructure boundaries.
 
 ```text
                          Pampanaa
                             │
-              ┌─────────────┴─────────────┐
-              │                           │
-            Domain                   Application
-              │                           │
-      ┌───────┼────────┐                  │
-      │       │        │                  │
-    World  Campaign  Game          Services / Use Cases
-      │       │        │                  │
-      └───────┼────────┘                  │
-              │                           │
-              └─────────────┬─────────────┘
-                            │
-                       Infrastructure
-                            │
-                         IndexedDB
+          ┌─────────────────┼─────────────────┐
+          │                 │                 │
+        Domain         Application         Runtime
+          │                 │                 │
+      World/Campaign    Use Cases       Simulation
+      Player/Progress   Services        Encounters
+      Encounters/Events                 Input
+                                        Rendering
+                                             │
+                                             ▼
+                                      Infrastructure
+                                             │
+                                          IndexedDB
 ```
 
 ### Domain foundation
 
-The domain now contains explicit models and contracts for concepts including:
+The domain contains explicit models and contracts for:
 
 - profiles and stable profile identity
 - settings
@@ -100,9 +98,61 @@ Save ≠ Runtime State
 
 These distinctions prevent implementation details from becoming the game's permanent domain model.
 
+## Game runtime
+
+**Phase 5 — Runtime Architecture is now implemented.**
+
+The existing monolithic canvas engine remains the gameplay simulation adapter for compatibility, while the responsibilities around it have been extracted into explicit runtime boundaries.
+
+```text
+React / input adapters
+        ↓
+   GameRuntime
+        │
+        ├── GameClock
+        ├── GameInput
+        ├── EncounterRuntime
+        ├── GameEventBus
+        └── CanvasGameRenderer
+        │
+        ▼
+    GameEngine
+   (simulation)
+```
+
+The runtime now owns:
+
+- lifecycle
+- requestAnimationFrame scheduling
+- bounded frame timing
+- input normalization
+- simulation/update ordering
+- rendering ordering
+- pause/resume/stop
+- runtime commands
+- session/encounter bridging
+
+Every frame follows:
+
+```text
+Read input
+   ↓
+Normalize input
+   ↓
+Update simulation
+   ↓
+Process events
+   ↓
+Render
+```
+
+The React `GameCanvas` no longer owns the high-frequency game loop. It supplies input and presentation context to `GameRuntime`.
+
+See `docs/game/PHASE-5-RUNTIME.md` for the detailed runtime contract.
+
 ## Game architecture direction
 
-The game is being aligned around this runtime flow:
+The game is aligned around this product flow:
 
 ```text
 Campaign
@@ -128,20 +178,6 @@ Persistence
 
 A wave is therefore a runtime encounter mechanism, not the definition of the campaign.
 
-The long-term runtime boundary is:
-
-```text
-Game Runtime
-├── Simulation
-├── Encounters
-├── Input
-├── Rendering
-├── Audio
-└── Game Loop
-```
-
-The runtime should communicate meaningful events outward rather than directly controlling React state or persistence.
-
 ## Persistence architecture
 
 Pampanaa uses IndexedDB through `idb` for local persistence.
@@ -165,14 +201,13 @@ Existing local data is treated as a migration concern. Refactors should preserve
 
 ## Repository structure
 
-The project is organized around clear responsibilities:
-
 ```text
 src/
 ├── application/       use cases and application services
 ├── domain/            game concepts, models, contracts and invariants
+├── runtime/           lifecycle, clock, input, events, encounters, rendering
 ├── infrastructure/   persistence adapters and external boundaries
-├── canvas/            existing high-frequency canvas runtime
+├── canvas/            gameplay simulation and canvas-specific implementation
 ├── components/        reusable UI components
 ├── contexts/          React application/runtime bridge
 ├── database/          IndexedDB implementation and migrations
@@ -188,33 +223,27 @@ Game design documentation lives under:
 docs/game/
 ├── GAME_BIBLE.md
 ├── GAMEPLAY_ALIGNMENT.md
-└── EXISTING_RUNTIME_MAP.md
-```
-
-These documents define the intended Pampanaa universe and map existing mechanics to their future architectural ownership.
-
-Desktop-only code lives under `public/`:
-
-```text
-public/
-├── electron.cjs
-└── preload.cjs
+├── EXISTING_RUNTIME_MAP.md
+└── PHASE-5-RUNTIME.md
 ```
 
 ## Architectural rules
 
 1. The domain owns game meaning and invariants.
 2. Application services coordinate use cases and state transitions.
-3. Infrastructure owns persistence and external integrations.
-4. The canvas runtime must not depend on React rendering.
-5. UI components must not access IndexedDB directly.
-6. Profile-owned persistence must use stable profile identity rather than display names.
-7. Related persistence changes should use one transaction.
-8. Native capabilities must cross the Electron preload boundary through a narrow API.
-9. Stored-data changes require an explicit migration.
-10. Runtime state must not automatically become persistent campaign state.
-11. Story concepts must not be hard-coded into rendering code.
-12. Existing gameplay should be preserved while responsibilities are extracted.
+3. Runtime owns the high-frequency game lifecycle.
+4. The simulation does not depend on React rendering.
+5. Rendering is a presentation boundary.
+6. Input is normalized before entering simulation.
+7. UI components must not access IndexedDB directly.
+8. Profile-owned persistence must use stable profile identity rather than display names.
+9. Related persistence changes should use one transaction.
+10. Native capabilities must cross the Electron preload boundary through a narrow API.
+11. Stored-data changes require an explicit migration.
+12. Runtime state must not automatically become persistent campaign state.
+13. Story concepts must not be hard-coded into rendering code.
+14. Existing gameplay should be preserved while responsibilities are extracted.
+15. Long-running browser frame gaps must be clamped before reaching simulation.
 
 ## Electron security
 
@@ -233,61 +262,33 @@ Native functionality should be implemented across the main-process/preload bound
 
 Pampanaa uses Bun as the primary package manager.
 
-Install dependencies:
-
 ```bash
 bun install
-```
-
-Start the web development environment:
-
-```bash
 bun run dev
-```
-
-Build the web application:
-
-```bash
 bun run build
-```
-
-Preview the production web build:
-
-```bash
 bun run preview
-```
-
-Run the Electron development environment:
-
-```bash
 bun run electron
-```
-
-Build the desktop application:
-
-```bash
 bun run electron-build
 ```
 
-## Current development status
+## Development status
 
-The project is in an **architecture-first refactor phase**.
+### Completed
 
-### Completed foundation
+- Repository/application boundaries
+- Domain models and invariants
+- Stable profile identity
+- Persistence adapters
+- IndexedDB schema hardening
+- Backup and recovery foundation
+- Pampanaa story/game bible
+- Existing gameplay/domain mapping
+- Game session and encounter application boundary
+- **Phase 5 runtime architecture**
 
-- Repository/application boundaries established
-- Domain models and invariants established
-- Stable profile identity introduced
-- Persistence adapters established
-- IndexedDB schema hardened
-- Backup and recovery foundation added
-- Pampanaa story/game bible established
-- Existing gameplay mapped to the new domain model
-- Game session and encounter application boundary introduced
+### Next
 
-### In progress
-
-The next major refactor is the extraction of the high-frequency game runtime from the monolithic canvas engine into explicit simulation, encounter, lifecycle and event boundaries while preserving the current gameplay experience.
+**Phase 6 — Encounter & Mission System** will move mission and encounter ownership further out of the legacy simulation so gameplay can be driven by explicit mission objectives and campaign state.
 
 Runtime verification remains a release gate: web builds, Electron packaging and persistence migrations must be executed in a real development environment before a release is considered verified.
 
