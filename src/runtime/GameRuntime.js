@@ -4,6 +4,9 @@ import GameInput from './input/GameInput';
 import CanvasGameRenderer from './rendering/CanvasGameRenderer';
 import EncounterRuntime from './encounters/EncounterRuntime';
 import GameEventBus from './events/GameEventBus';
+import { createPlayerLoadoutService } from '../application/player/playerLoadoutService';
+import { createThreatService } from '../application/world/threatService';
+import { createRuntimeSessionService } from '../application/runtime/sessionService';
 
 export const RUNTIME_STATES = Object.freeze({
   IDLE: 'idle',
@@ -31,6 +34,20 @@ export class GameRuntime {
     this.input = new GameInput();
     this.renderer = new CanvasGameRenderer(canvasContext);
     this.events = new GameEventBus();
+    this.playerLoadout = createPlayerLoadoutService({
+      initialLoadout: {
+        activeWeaponKey: progress?.selectedWeapon || 'blaster',
+        weaponAmps: progress?.weaponAmps,
+      },
+      initialBuffs: progress?.activeBuffs,
+      onEvent: (name, payload) => this.events.emit(name, payload),
+    });
+    this.threats = createThreatService({
+      onEvent: (name, payload) => this.events.emit(name, payload),
+    });
+    this.sessionRuntime = createRuntimeSessionService({
+      onEvent: (name, payload) => this.events.emit(name, payload),
+    });
     this.encounters = new EncounterRuntime({
       mission,
       onDomainEvent: (name, payload) => this.events.emit(name, payload),
@@ -47,25 +64,52 @@ export class GameRuntime {
       callbacks: {
         onSync: (patch) => this.onSync?.(patch),
         onEvent: (name, payload) => {
+          this.handleSimulationEvent(name, payload);
           this.encounters.handleSimulationEvent(name, payload);
           this.onEvent?.(name, payload);
         },
       },
     });
 
-    this.encounters.startSession({
+    const sessionInput = {
+      id: `session_${Date.now()}`,
       profileId: progress?.profileId || progress?.id,
-      campaignId: mode || 'campaign',
       missionId: mission?.id || `mission_${startWave}`,
+      encounterId: `encounter_${startWave}`,
+    };
+    this.sessionRuntime.start(sessionInput);
+    this.encounters.startSession({
+      profileId: sessionInput.profileId,
+      campaignId: mode || 'campaign',
+      missionId: sessionInput.missionId,
       chapterId: mission?.chapterId,
     });
     this.encounters.startEncounter({
-      id: `encounter_${startWave}`,
-      missionId: mission?.id || `mission_${startWave}`,
+      id: sessionInput.encounterId,
+      missionId: sessionInput.missionId,
       wave: startWave,
     });
 
     if (resumeSnapshot) this.simulation.restore(resumeSnapshot);
+    this.syncPresentation();
+  }
+
+  handleSimulationEvent(name, payload = {}) {
+    if (name === 'weaponChanged') this.playerLoadout.equipWeapon(payload.weapon || payload.key || this.simulation.currentWeaponKey);
+    if (name === 'bossDefeated') this.sessionRuntime.complete({ outcome: 'boss_defeated', bossId: payload.bossId || this.simulation.boss?.id });
+    if (name === 'gameOver') this.sessionRuntime.fail('game_over');
+    if (name === 'waveAdvance') this.sessionRuntime.start({ id: this.sessionRuntime.getSession()?.id, missionId: this.mission?.id, encounterId: `encounter_${payload.wave}` });
+    this.syncPresentation();
+  }
+
+  syncPresentation() {
+    this.onSync?.({
+      playerLoadout: this.playerLoadout.getLoadout(),
+      playerBuffs: this.playerLoadout.getBuffs(),
+      threatCatalog: this.threats.getThreats(),
+      bossCatalog: this.threats.getBosses(),
+      runtimeSession: this.sessionRuntime.getSession(),
+    });
   }
 
   setContext(context) { this.renderer.setContext(context); }
@@ -123,17 +167,24 @@ export class GameRuntime {
     this.input.set(this.getInput?.() ?? this.input.read());
     this.simulation.setInput(this.input.read());
     this.simulation.update(dt);
+    this.playerLoadout.tick(dt);
     this.renderer.render(this.simulation, dt);
   }
 
   draw() { this.renderer.render(this.simulation, 0); }
   selectWeapon(key) { return this.simulation.selectWeapon(key); }
   cycleWeapon(direction) { return this.simulation.cycleWeapon(direction); }
+  applyPickup(type) { return this.playerLoadout.applyPickup(type, this.simulation.currentWeaponKey); }
   snapshot() { return this.simulation.snapshot(); }
 
   get mission() { return this.encounters.mission; }
   get session() { return this.encounters.session; }
   get encounter() { return this.encounters.encounter; }
+  get runtimeSession() { return this.sessionRuntime.getSession(); }
+  get playerLoadoutState() { return this.playerLoadout.getLoadout(); }
+  get playerBuffState() { return this.playerLoadout.getBuffs(); }
+  get threatCatalog() { return this.threats.getThreats(); }
+  get bossCatalog() { return this.threats.getBosses(); }
   get fps() { return this.simulation.fps; }
   get status() { return this.simulation.status; }
   get score() { return this.simulation.score; }
