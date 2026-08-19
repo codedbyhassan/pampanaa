@@ -27,18 +27,11 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
   const [fps, setFps] = useState(0);
   const bestWaveRef = useRef(progress.highestWaveReached);
   const mission = MISSION_CATALOG.find((item) => item.id === missionId) || MISSION_CATALOG[0];
-
-  const scheme = settings.controlScheme === 'auto'
-    ? typeof window !== 'undefined' && 'ontouchstart' in window ? 'touch' : 'keyboard'
-    : settings.controlScheme;
+  const scheme = settings.controlScheme === 'auto' ? (typeof window !== 'undefined' && 'ontouchstart' in window ? 'touch' : 'keyboard') : settings.controlScheme;
   const touch = useTouchControls(scheme === 'touch');
 
   useEffect(() => { resumeAudio(); }, [resumeAudio]);
-  useEffect(() => {
-    if (!settings.showFps) return undefined;
-    const id = setInterval(() => setFps(engineRef.current?.fps ?? 0), 500);
-    return () => clearInterval(id);
-  }, [settings.showFps]);
+  useEffect(() => { if (!settings.showFps) return undefined; const id = setInterval(() => setFps(engineRef.current?.fps ?? 0), 500); return () => clearInterval(id); }, [settings.showFps]);
 
   const unlockById = useCallback(async (id) => {
     const def = ACHIEVEMENTS.find((a) => a.id === id);
@@ -69,7 +62,7 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
       await saveProgress(patch);
       await recordCompletedEncounter(wave - 1, engine.score);
       if (settings.autoSave !== false) {
-        await persistGameSnapshot(engine.snapshot());
+        await persistGameSnapshot({ ...engine.snapshot(), missionId });
         setHasSave(true);
       }
     }
@@ -77,24 +70,17 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
       setIsBest(payload.wave > (bestWaveRef.current || 0));
       setGameOver(true);
       const stats = structuredClone(progress.stats);
-      stats.totalDeaths += 1;
-      stats.gamesPlayed += 1;
+      stats.totalDeaths += 1; stats.gamesPlayed += 1;
       for (const [type, count] of Object.entries(engine.killsByType)) stats.totalKillsByType[type] = (stats.totalKillsByType[type] || 0) + count;
       for (const [key, count] of Object.entries(engine.shotsByWeapon)) stats.shotsFiredByWeapon[key] = (stats.shotsFiredByWeapon[key] || 0) + count;
       await saveProgress({ stats, totalEnemiesDefeated: progress.totalEnemiesDefeated || 0, totalPlayTime: Math.round((progress.totalPlayTime || 0) + engine.playTime), highestWaveReached: Math.max(progress.highestWaveReached || 0, payload.wave) });
-      await clearGameSnapshot();
-      setHasSave(false);
+      await clearGameSnapshot(); setHasSave(false);
     }
-  }, [progress, saveProgress, settings.autoSave, settings.difficultyLevel, setHasSave, unlockById]);
+  }, [missionId, progress, saveProgress, settings.autoSave, settings.difficultyLevel, setHasSave, unlockById]);
 
   const togglePause = useCallback(() => { if (!gameOver) setPaused((p) => !p); }, [gameOver]);
-  const openSaveSlots = () => { const engine = engineRef.current; if (!engine || engine.boss) return; setSaveSnapshot(engine.snapshot()); };
-  const commitSave = async () => {
-    if (saveSnapshot) await persistGameSnapshot(saveSnapshot);
-    setSaveSnapshot(null);
-    setHasSave(true);
-    onQuit();
-  };
+  const openSaveSlots = () => { const engine = engineRef.current; if (!engine || engine.boss) return; setSaveSnapshot({ ...engine.snapshot(), missionId }); };
+  const commitSave = async () => { if (saveSnapshot) await persistGameSnapshot(saveSnapshot); setSaveSnapshot(null); setHasSave(true); onQuit(); };
   const restart = () => { setGameOver(false); setPaused(false); syncFromEngine({ status: 'playing' }); setRunKey((k) => k + 1); };
 
   return (
