@@ -34,9 +34,16 @@ export class GameRuntime {
 
   handleSimulationEvent(name, payload = {}) {
     if (name === 'weaponChanged') this.playerLoadout.equipWeapon(payload.weapon || this.simulation.currentWeaponKey);
-    if (name === 'pickupCollected') this.playerLoadout.applyPickup(payload.type, payload.weaponKey || this.simulation.currentWeaponKey);
-    if (name === 'bossEntered') { const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId); if (boss) this.threats.beginBoss(boss.id); }
-    if (name === 'bossDefeated') { const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId); if (boss) this.threats.defeatBoss(boss); this.sessionRuntime.complete({ outcome: 'boss_defeated', bossId: payload.bossId || boss?.id }); }
+    if (name === 'pickupCollected') { this.playerLoadout.applyPickup(payload.type, payload.weaponKey || this.simulation.currentWeaponKey); this.onEvent?.('PLAYER_PICKUP_COLLECTED', payload); }
+    if (name === 'bossEntered') {
+      const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId);
+      if (boss) { this.threats.beginBoss(boss.id); this.onEvent?.('BOSS_ENTERED', { boss, phase: payload.phase }); }
+    }
+    if (name === 'bossDefeated') {
+      const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId);
+      if (boss) this.threats.defeatBoss(boss);
+      this.sessionRuntime.complete({ outcome: 'boss_defeated', bossId: payload.bossId || boss?.id });
+    }
     if (name === 'gameOver') this.sessionRuntime.fail('game_over');
     if (name === 'waveAdvance') this.sessionRuntime.start({ id: this.sessionRuntime.getSession()?.id, missionId: this.mission?.id, encounterId: `encounter_${payload.wave}` });
     this.syncPresentation();
