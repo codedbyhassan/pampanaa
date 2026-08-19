@@ -1,15 +1,7 @@
-import { FACTIONS, THREAT_ROLES } from './threatModel';
+import { FACTIONS } from './threatModel';
 
-export const THREAT_CLASSES = Object.freeze({
-  SKIRMISHER: 'skirmisher',
-  SWARM: 'swarm',
-  ASSAULT: 'assault',
-  CONTROLLER: 'controller',
-  SENTINEL: 'sentinel',
-  COLOSSUS: 'colossus',
-});
-
-export const BOSS_PHASES = Object.freeze({ ENTRY: 'entry', PRESSURE: 'pressure', CRITICAL: 'critical', DEFEATED: 'defeated' });
+export const THREAT_CLASSES = Object.freeze({ SKIRMISHER: 'skirmisher', SWARM: 'swarm', ASSAULT: 'assault', CONTROLLER: 'controller', SENTINEL: 'sentinel', COLOSSUS: 'colossus' });
+export const BOSS_PHASES = Object.freeze({ ENTRY: 'entry', TELEGRAPH: 'telegraph', ATTACK: 'attack', VULNERABLE: 'vulnerable', CRITICAL: 'critical', DEFEATED: 'defeated' });
 
 export const THREAT_PRESENTATIONS = Object.freeze({
   veiled_swarm: { classId: THREAT_CLASSES.SWARM, codexName: 'Veilspawn', subtitle: 'Signal-fed swarm', silhouette: 'small-fragment', motion: 'erratic', threatCue: 'density' },
@@ -18,29 +10,42 @@ export const THREAT_PRESENTATIONS = Object.freeze({
   veiled_colossus: { classId: THREAT_CLASSES.COLOSSUS, codexName: 'The Colossus', subtitle: 'First known Veiled giant', silhouette: 'monolith-core', motion: 'deliberate', threatCue: 'scale', boss: true },
 });
 
-export const BOSS_CATALOG = Object.freeze([
-  { id: 'veiled_colossus', name: 'The Colossus', title: 'The First Giant', regionId: 'deadlands', chapterId: 'chapter_2', factionId: FACTIONS.VEILED, phases: [BOSS_PHASES.ENTRY, BOSS_PHASES.PRESSURE, BOSS_PHASES.CRITICAL], storyRole: 'The first undeniable proof that the returning signal is changing the Veiled.', defeatOutcome: 'The recovered signal record points deeper toward the Frontier.' },
-  { id: 'signal_warden', name: 'The Signal Warden', title: 'Keeper of the Response', regionId: 'signal_zone', chapterId: 'chapter_3', factionId: FACTIONS.ARCHITECTS, phases: [BOSS_PHASES.ENTRY, BOSS_PHASES.PRESSURE, BOSS_PHASES.CRITICAL], storyRole: 'An ancient network guardian answering the signal from beneath the ruins.', defeatOutcome: 'The response reveals that Pampanaa was deliberately left untouched.' },
-  { id: 'architect_core', name: 'The Architect Core', title: 'The Sleeping Network', regionId: 'ruins', chapterId: 'chapter_4', factionId: FACTIONS.ARCHITECTS, phases: [BOSS_PHASES.ENTRY, BOSS_PHASES.PRESSURE, BOSS_PHASES.CRITICAL], storyRole: 'The intelligence behind the silence and the old network.', defeatOutcome: 'The truth of the Silence reaches the Haven.' },
-]);
+const BOSS_STORY = [
+  ['Newton', 'Principia Engine', 'A Veiled intelligence reconstructing the physical laws of the dead world.'],
+  ['Pythagoras', 'Right Angle Choir', 'A formation intelligence that turns the old perimeter geometry against Haven.'],
+  ['Einstein', 'Relativity Core', 'A signal-distorted core where distance and timing no longer behave normally.'],
+  ['Lovelace', 'Analytical Loom', 'An ancient network process weaving fragments of the lost transmission together.'],
+  ['Curie', 'Radiant Lattice', 'A contaminated reactor intelligence awakened by the returning signal.'],
+  ['Turing', 'Halting Machine', 'A dormant decision engine trying to determine whether humanity should continue.'],
+  ['Hypatia', 'Conic Sections', 'A buried observatory intelligence defending the route into the old world.'],
+  ['Ramanujan', 'Infinite Series', 'A recursive signal-form that keeps rebuilding itself from defeated fragments.'],
+  ['Nietzsche', 'Eternal Return', 'A Veiled cycle that repeats the violence encoded in the Silence.'],
+  ['Euclid', 'Axiom Array', 'A geometric defense system guarding the final approach to the ruins.'],
+  ['Noether', 'Symmetry Engine', 'A network guardian preserving the balance of the abandoned infrastructure.'],
+  ['Fibonacci', 'Golden Spiral', 'A signal pattern that grows more complex every time the Haven responds.'],
+  ['Kepler', 'Elliptic Choir', 'An orbital intelligence watching the region from the remains of the old array.'],
+  ['Tesla', 'Resonant Coil', 'A power system that has learned to answer the returning transmission.'],
+  ['Boltzmann', 'Entropy Furnace', 'A failing reactor converting the remaining infrastructure into hostile energy.'],
+  ['Gödel', 'Incompleteness', 'The final contradiction in the old network, holding the truth of the Silence.'],
+];
 
-export function getThreatPresentation(id) {
-  return THREAT_PRESENTATIONS[id] ?? null;
-}
+export const BOSS_CATALOG = Object.freeze(BOSS_STORY.map(([name, title, storyRole], index) => Object.freeze({
+  id: `boss_${index + 1}`,
+  runtimeName: name,
+  name,
+  title,
+  chapterId: index < 4 ? 'chapter_2' : index < 8 ? 'chapter_3' : index < 12 ? 'chapter_4' : 'chapter_5',
+  regionId: index < 4 ? 'deadlands' : index < 8 ? 'frontier' : index < 12 ? 'ruins' : 'signal_zone',
+  factionId: index >= 10 ? FACTIONS.ARCHITECTS : FACTIONS.VEILED,
+  storyRole,
+  phases: [BOSS_PHASES.TELEGRAPH, BOSS_PHASES.ATTACK, BOSS_PHASES.VULNERABLE, BOSS_PHASES.CRITICAL],
+  defeatOutcome: index === BOSS_STORY.length - 1 ? 'The truth of the Silence reaches the Haven.' : 'The recovered signal fragment points deeper into the old network.',
+})));
 
-export function getBossDefinition(id) {
-  return BOSS_CATALOG.find((boss) => boss.id === id) ?? null;
-}
-
+export function getThreatPresentation(id) { return THREAT_PRESENTATIONS[id] ?? null; }
+export function getBossDefinition(id) { return BOSS_CATALOG.find((boss) => boss.id === id || boss.runtimeName === id || boss.name === id) ?? null; }
+export function getBossDefinitionForIndex(index) { return BOSS_CATALOG[Math.max(0, index) % BOSS_CATALOG.length] ?? null; }
 export function createThreatState(input = {}) {
   const definition = THREAT_PRESENTATIONS[input.threatId] ?? {};
-  return Object.freeze({
-    threatId: input.threatId,
-    classId: definition.classId ?? THREAT_CLASSES.ASSAULT,
-    health: Math.max(0, Number(input.health ?? 1)),
-    maxHealth: Math.max(1, Number(input.maxHealth ?? input.health ?? 1)),
-    phase: input.phase ?? (definition.boss ? BOSS_PHASES.ENTRY : null),
-    enraged: Boolean(input.enraged),
-    active: input.active !== false,
-  });
+  return Object.freeze({ threatId: input.threatId, classId: definition.classId ?? THREAT_CLASSES.ASSAULT, health: Math.max(0, Number(input.health ?? 1)), maxHealth: Math.max(1, Number(input.maxHealth ?? input.health ?? 1)), phase: input.phase ?? (definition.boss ? BOSS_PHASES.ENTRY : null), enraged: Boolean(input.enraged), active: input.active !== false });
 }
