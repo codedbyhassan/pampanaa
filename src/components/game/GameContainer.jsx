@@ -3,6 +3,7 @@ import GameCanvas from './GameCanvas';
 import GameHUD from './GameHUD';
 import PauseMenu from './PauseMenu';
 import GameOverScreen from './GameOverScreen';
+import RuntimeNotice from './RuntimeNotice';
 import TouchControls from './TouchControls';
 import Settings from '../../pages/Settings';
 import { useGame } from '../../contexts/GameContext';
@@ -27,6 +28,7 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
   const [runKey, setRunKey] = useState(0);
   const [fps, setFps] = useState(0);
   const [updates, setUpdates] = useState([]);
+  const [notice, setNotice] = useState(null);
   const bestWaveRef = useRef(progress.highestWaveReached);
   const mission = MISSION_CATALOG.find((item) => item.id === missionId) || MISSION_CATALOG[0];
   const scheme = settings.controlScheme === 'auto' ? (typeof window !== 'undefined' && 'ontouchstart' in window ? 'touch' : 'keyboard') : settings.controlScheme;
@@ -36,25 +38,33 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
     setUpdates((current) => appendUpdate(current, { type, title, message }));
   }, []);
 
+  const showNotice = useCallback((title, message) => {
+    setNotice({ id: `${Date.now()}_${Math.random()}`, title, message, duration: 2400 });
+  }, []);
+
   useEffect(() => { resumeAudio(); }, [resumeAudio]);
   useEffect(() => { if (!settings.showFps) return undefined; const id = setInterval(() => setFps(engineRef.current?.fps ?? 0), 500); return () => clearInterval(id); }, [settings.showFps]);
   useEffect(() => {
     addUpdate(UPDATE_TYPES.MISSION, mission.title, mission.description);
-  }, [addUpdate, mission.description, mission.title]);
+    showNotice(mission.title, mission.description);
+  }, [addUpdate, mission.description, mission.title, showNotice]);
 
   const unlockById = useCallback(async (id) => {
     const def = ACHIEVEMENTS.find((a) => a.id === id);
     if (!def) return;
     const created = await tryUnlockAchievement(def);
     if (created) {
-      addUpdate(UPDATE_TYPES.PROGRESSION, 'Achievement unlocked', def.title || def.name || 'A new achievement was recorded.');
+      const title = 'Achievement unlocked';
+      const message = def.title || def.name || 'A new achievement was recorded.';
+      addUpdate(UPDATE_TYPES.PROGRESSION, title, message);
+      showNotice(title, message);
     }
     if (created && def.skin) {
       const skins = new Set(progress.unlockedSkins || ['default']);
       skins.add(def.skin);
       await saveProgress({ unlockedSkins: [...skins] });
     }
-  }, [addUpdate, progress.unlockedSkins, saveProgress, tryUnlockAchievement]);
+  }, [addUpdate, progress.unlockedSkins, saveProgress, showNotice, tryUnlockAchievement]);
 
   const handleEvent = useCallback(async (name, payload) => {
     const engine = engineRef.current;
@@ -70,6 +80,7 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
     if (name === 'bossDefeated') {
       unlockById('first_boss');
       addUpdate(UPDATE_TYPES.MISSION, 'Encounter complete', 'The major encounter has been resolved.');
+      showNotice('Encounter complete', 'The major encounter has been resolved.');
     }
     if (name === 'waveAdvance') {
       const wave = payload.wave;
@@ -84,6 +95,7 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
         setHasSave(true);
       }
       addUpdate(UPDATE_TYPES.MISSION, `Wave ${wave}`, 'The encounter has advanced.');
+      showNotice(`Wave ${wave}`, 'The encounter has advanced.');
     }
     if (name === 'gameOver') {
       setIsBest(payload.wave > (bestWaveRef.current || 0));
@@ -96,17 +108,18 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
       await saveProgress({ stats, totalEnemiesDefeated: progress.totalEnemiesDefeated || 0, totalPlayTime: Math.round((progress.totalPlayTime || 0) + engine.playTime), highestWaveReached: Math.max(progress.highestWaveReached || 0, payload.wave) });
       await clearGameSnapshot(); setHasSave(false);
     }
-  }, [addUpdate, missionId, progress, saveProgress, settings.autoSave, settings.difficultyLevel, setHasSave, unlockById]);
+  }, [addUpdate, missionId, progress, saveProgress, settings.autoSave, settings.difficultyLevel, setHasSave, showNotice, unlockById]);
 
   const togglePause = useCallback(() => { if (!gameOver) setPaused((p) => !p); }, [gameOver]);
   const openSaveSlots = () => { const engine = engineRef.current; if (!engine || engine.boss) return; setSaveSnapshot({ ...engine.snapshot(), missionId }); };
   const commitSave = async () => { if (saveSnapshot) await persistGameSnapshot(saveSnapshot); setSaveSnapshot(null); setHasSave(true); onQuit(); };
-  const restart = () => { setGameOver(false); setPaused(false); setUpdates([]); syncFromEngine({ status: 'playing' }); setRunKey((k) => k + 1); };
+  const restart = () => { setGameOver(false); setPaused(false); setUpdates([]); setNotice(null); syncFromEngine({ status: 'playing' }); setRunKey((k) => k + 1); };
 
   return (
     <div className="sg-game">
       <GameCanvas key={runKey} mode={mode} startWave={startWave} resumeSnapshot={runKey === 0 ? resumeSnapshot : null} paused={paused || gameOver} scheme={scheme} touch={touch} engineRef={engineRef} onEngineEvent={handleEvent} onTogglePause={togglePause} />
       <GameHUD hud={hud} mode={mode} mission={mission} fps={settings.showFps ? fps : null} />
+      <RuntimeNotice notice={notice} onClear={() => setNotice(null)} />
       {scheme === 'touch' && <div className="sg-overlay" style={{ pointerEvents: 'none' }}><TouchControls onMove={touch.setMove} onFire={touch.setFiring} /></div>}
       {paused && !gameOver && !pauseSettingsOpen && !saveSnapshot && <PauseMenu updates={updates} onResume={() => setPaused(false)} onSaveQuit={openSaveSlots} onQuit={onQuit} onSettings={() => setPauseSettingsOpen(true)} saveDisabled={!!engineRef.current?.boss} />}
       {saveSnapshot && <SaveSlotDialog snapshot={saveSnapshot} defaultName={`${mission.title} · Wave ${saveSnapshot.wave || 1}`} onSaved={commitSave} onCancel={() => setSaveSnapshot(null)} />}
