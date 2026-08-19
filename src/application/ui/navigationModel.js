@@ -17,7 +17,9 @@ export const FRONTEND_NAVIGATION = Object.freeze([
   { id: FRONTEND_ROUTES.CODEX, label: 'Codex', description: 'Review discoveries, factions and threats.' },
   { id: FRONTEND_ROUTES.CAREER, label: 'Career', description: 'Track the Warden progression.' },
   { id: FRONTEND_ROUTES.ACHIEVEMENTS, label: 'Achievements', description: 'Review completed milestones.' },
-  { id: FRONTEND_ROUTES.LEADERBOARD, label: 'Leaderboard', description: 'Compare recorded scores.' },
+  { id: FRONTEND_ROUTES.LEADERBOARD, label: 'Leaderboard', description: 'Review recorded scores.' },
+  { id: FRONTEND_ROUTES.SETTINGS, label: 'Settings', description: 'Configure controls, audio and display.' },
+  { id: FRONTEND_ROUTES.CREDITS, label: 'Credits', description: 'The people and systems behind Pampanaa.' },
 ]);
 
 export function createNavigationState(input = {}) {
