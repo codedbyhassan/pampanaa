@@ -1,5 +1,8 @@
+# Pampanaa
 
-Pampanaa now has an explicit gameplay hierarchy:
+Pampanaa is a story-driven sci-fi defense game centered on the last surviving settlement, its Warden and the signal returning from beyond the dead zones.
+
+## Gameplay hierarchy
 
 ```text
 Campaign
@@ -17,49 +20,25 @@ Simulation
 Outcome
 ```
 
-Missions now own:
+A wave is a gameplay mechanism inside an encounter. It is no longer the authoritative representation of campaign progression.
 
-- chapter identity
-- mission identity
-- title and description
-- objectives
-- objective completion state
-- encounter references
-- lifecycle timestamps
+## Campaign & narrative
 
-Mission lifecycle:
+The campaign is organized into five chapters: The Silence, The Frontier, The Signal, The Truth and Pampanaa.
 
-```text
-AVAILABLE
-   ↓
- ACTIVE
-   ↓
-COMPLETED
-   ↘
-   FAILED
-```
+Narrative events support intro, discovery, dialogue, revelation and outcome states. Campaign state tracks active chapters, completed missions, discoveries and story flags.
 
-Encounter lifecycle remains canonical:
+## World
+
+The world domain defines regions, factions and threats independently of canvas entities.
 
 ```text
-PENDING
-   ↓
- ACTIVE
-   ↓
-RESOLVED
-   ↘
-   FAILED
+Regions: Haven → Deadlands → Frontier → Ruins → Signal Zone
+Factions: Haven · Wanderers · Veiled · Architects
+Threat roles: Swarm · Assault · Support · Control · Boss
 ```
 
-The runtime bridges simulation outcomes into mission/encounter events. Wave progression no longer has to be interpreted as campaign progression by the frontend.
-
-The canvas runtime can receive a mission definition and exposes mission, encounter and session state alongside existing gameplay state.
-
-See `docs/game/PHASE-6-MISSIONS.md` for the mission contract.
-
-## Player progression
-
-Pampanaa now treats Warden progression as an explicit domain concern rather than a side effect of the canvas runtime.
+## Warden progression
 
 ```text
 Profile
@@ -75,36 +54,39 @@ Warden Progression
   └── Unlocks
 ```
 
-Progression is driven by game events through an application service. Supported progression events include mission completion, encounter resolution, enemy defeats, boss defeats, discoveries and achievement unlocks.
+Progression is driven by canonical game events. Score remains a run-performance metric rather than the source of campaign truth.
 
-Score remains a run-performance metric and is not used as the authoritative campaign progression source.
+## Frontend architecture
 
-Progression rules and baseline XP rewards are centralized in the domain so balancing can evolve without scattering values throughout the runtime.
-
-See `docs/game/PHASE-7-PROGRESSION.md` for the progression contract.
-
-## Game architecture direction
-
-The complete product flow is now:
+The React frontend is a presentation layer over the application/domain model.
 
 ```text
-Campaign
+React UI
    ↓
-Mission
+Frontend read model
    ↓
-Objective
+Application services
    ↓
-Encounter
+Domain
    ↓
-Wave
-   ↓
-Simulation
-   ↓
-Outcome
-   ↓
-Domain Event
-   ↓
-Progress / Narrative
-   ↓
-Persistence
+Runtime / Persistence
 ```
+
+The command interface is organized around Campaign, Missions, Codex, Career, Achievements, Leaderboard, Settings and Credits. The game HUD presents mission/objective context while retaining score, encounter, hull, weapon and threat state.
+
+Gameplay persistence is accessed through an application boundary rather than importing database modules directly into gameplay UI.
+
+## Architecture phases
+
+- Phase 5 — Runtime architecture: complete
+- Phase 6 — Missions & encounters: complete
+- Phase 7 — Player & progression: complete
+- Phase 8 — World, factions & threats: complete
+- Phase 9 — Campaign & narrative: complete
+- Phase 10 — UI/UX architecture and frontend reconciliation: complete
+
+See the phase documents under `docs/game/` for the individual contracts.
+
+## Product direction
+
+Pampanaa should feel like a coherent story-driven sci-fi game rather than a generic wave-defense dashboard. Campaign context, objectives, discoveries and Warden progression provide the meaning around the existing fast arcade combat.
