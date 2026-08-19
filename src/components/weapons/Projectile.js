@@ -4,8 +4,8 @@ import Vector2D from '../physics/Vector2D';
 export class Projectile {
   constructor() {
     this.active = false;
-    this.x = 0; this.y = 0; this.vx = 0; this.vy = 0;
-    this.width = 6; this.height = 6; this.damage = 0; this.life = 0;
+    this.x = 0; this.y = 0; this.prevX = 0; this.prevY = 0;
+    this.vx = 0; this.vy = 0; this.width = 6; this.height = 6; this.damage = 0; this.life = 0;
     this.source = 'player'; this.color = '#fff'; this.weaponKey = 'blaster';
     this.homing = false; this.piercing = false; this.target = null;
   }
@@ -14,6 +14,8 @@ export class Projectile {
     Object.assign(this, config);
     this.active = true;
     this.life = config.life ?? 2;
+    this.prevX = this.x;
+    this.prevY = this.y;
     this.target = null;
   }
 
@@ -34,6 +36,8 @@ export class Projectile {
       }
     }
 
+    this.prevX = this.x;
+    this.prevY = this.y;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
     if (this.x < -40 || this.x > WORLD.width + 40 || this.y < -40 || this.y > WORLD.height + 40) this.deactivate();
@@ -46,9 +50,6 @@ export class Projectile {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.atan2(this.vy, this.vx));
-
-    // Per-projectile shadowBlur is intentionally avoided. Hundreds of blurred
-    // canvas primitives can trigger expensive compositing and visible frame spikes.
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = this.color;
     ctx.fillRect(-w * 0.65, -h * 0.75, w * 1.3, h * 1.5);
