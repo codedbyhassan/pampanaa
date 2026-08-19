@@ -29,7 +29,7 @@ export class GameEngine {
     this.player.activeWeaponKey = this.currentWeaponKey;
     if (progress.weaponAmps) this.player.weaponAmps = structuredClone(progress.weaponAmps);
     if (progress.activeBuffs) this.player.activeBuffs = { ...this.player.activeBuffs, ...progress.activeBuffs };
-    this.enemies = []; this.projectiles = new ObjectPool(() => new Projectile(), PROJECTILE_POOL_SIZE);
+    this.enemies = []; this.projectiles = new ObjectPool(() => new Projectile(), PROJECTILE_POOL_SIZE, PROJECTILE_POOL_SIZE);
     this.particles = new ParticleSystem(); this.particles.reducedMotion = !!settings.reducedMotion;
     this.damageNumbers = new DamageNumbers(); this.pickups = new PickupSystem(); this.shake = new ScreenShake();
     this.shake.enabled = !settings.reducedMotion && settings.screenShake !== false; this.formation = new FormationManager(this);
@@ -56,7 +56,12 @@ export class GameEngine {
   findNearestEnemy(x, y) { let best = null; let bestDist = Infinity; for (const enemy of this.enemies) { if (!enemy.active) continue; const d = (enemy.x - x) ** 2 + (enemy.y - y) ** 2; if (d < bestDist) { bestDist = d; best = enemy; } } return best; }
   createEnemy(type, x, y, scale = this.enemyStatScale, sizeMul = 1) { return new Enemy(type, x, y, scale, this.colorblind, sizeMul); }
   syncBoss() { const b = this.boss; if (!b) return this.sync({ boss: null }); return this.sync({ boss: { name: b.name, title: b.title, phase: b.phase, attack: b.attack, health: b.health, maxHealth: b.maxHealth } }); }
-  spawnProjectile(config) { const p = this.projectiles.acquire(); p.spawn(config); }
+  spawnProjectile(config) {
+    const p = this.projectiles.acquire();
+    if (!p) return false;
+    p.spawn(config);
+    return true;
+  }
   handleResize() { this.player.x = Math.min(this.player.x, WORLD.width - this.player.width / 2); this.player.y = Math.min(this.player.y, WORLD.height - this.player.height / 2); }
   startWave() {
     this.waveStarted = true; this.player.tookDamageThisWave = false; this.waveStartHealth = this.player.health; this.waveMaxTime = 0; this.enemies = this.enemies.filter((e) => e.active && e.mode === 'free');
