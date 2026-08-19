@@ -1,6 +1,6 @@
 import { getDB } from './db';
-import { createProfile, createProfileId, normaliseProfileName } from '../domain/profiles/profile';
-import { renameProfileModel, touchProfileModel } from '../domain/profiles/profileModel';
+import { createProfileId, normaliseProfileName } from '../domain/profiles/profile';
+import { createProfile, renameProfileModel, touchProfileModel } from '../domain/profiles/profileModel';
 
 const STORAGE_KEY = 'pampanaa.activeProfile';
 const ID_STORAGE_KEY = 'pampanaa.activeProfileId';
