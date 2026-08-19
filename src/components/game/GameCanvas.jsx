@@ -33,40 +33,28 @@ export function GameCanvas({
   eventRef.current = onEngineEvent;
   syncRef.current = syncFromEngine;
 
-  const handleKeyDown = useCallback(
-    (code) => {
-      const runtime = runtimeRef.current;
-      if (!runtime) return;
-      if (code === 'Escape') {
-        onTogglePause();
-        return;
-      }
-      if (code === 'KeyQ') return runtime.cycleWeapon(-1);
-      if (code === 'KeyE') return runtime.cycleWeapon(1);
-      const index = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7'].indexOf(code);
-      if (index >= 0) runtime.selectWeapon(WEAPON_ORDER[index]);
-    },
-    [onTogglePause],
-  );
+  const handleKeyDown = useCallback((code) => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    if (code === 'Escape') return onTogglePause();
+    if (code === 'KeyQ') return runtime.cycleWeapon(-1);
+    if (code === 'KeyE') return runtime.cycleWeapon(1);
+    const index = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7'].indexOf(code);
+    if (index >= 0) runtime.selectWeapon(WEAPON_ORDER[index]);
+  }, [onTogglePause]);
 
   const keyboard = useKeyboard(settings.keymap, { onKeyDown: handleKeyDown });
 
   inputProviderRef.current = () => {
     const pad = gamepad.read();
     let input;
-    if (pad.activeThisFrame && scheme !== 'touch' && scheme !== 'keyboard') {
-      input = { x: pad.x, y: pad.y, firing: pad.firing };
-    } else if (scheme === 'touch') {
-      input = touch.read();
-    } else {
+    if (pad.activeThisFrame && scheme !== 'touch' && scheme !== 'keyboard') input = { x: pad.x, y: pad.y, firing: pad.firing };
+    else if (scheme === 'touch') input = touch.read();
+    else {
       const kb = keyboard.read();
       const t = touch.read();
       if (kb.x || kb.y) aimRef.current = null;
-      input = {
-        x: kb.x || t.x,
-        y: kb.y || t.y,
-        firing: kb.firing || t.firing || mouseDownRef.current,
-      };
+      input = { x: kb.x || t.x, y: kb.y || t.y, firing: kb.firing || t.firing || mouseDownRef.current };
     }
     return { ...input, aim: aimRef.current };
   };
@@ -74,9 +62,7 @@ export function GameCanvas({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
-
     ctxRef.current = setupCanvas(canvas);
-
     const runtime = new GameRuntime({
       canvasContext: ctxRef.current,
       settings,
@@ -89,7 +75,6 @@ export function GameCanvas({
       onSync: (patch) => syncRef.current?.(patch),
       onEvent: (name, payload) => eventRef.current?.(name, payload),
     });
-
     runtimeRef.current = runtime;
     engineRef.current = runtime;
     runtime.resize();
@@ -105,8 +90,12 @@ export function GameCanvas({
       mission: runtime.mission,
       encounter: runtime.encounter,
       session: runtime.session,
+      playerLoadout: runtime.playerLoadoutState,
+      playerBuffs: runtime.playerBuffState,
+      threatCatalog: runtime.threatCatalog,
+      bossCatalog: runtime.bossCatalog,
+      runtimeSession: runtime.runtimeSession,
     });
-
     return () => {
       runtime.stop();
       runtime.events.clear();
@@ -149,36 +138,21 @@ export function GameCanvas({
   useEffect(() => {
     const runtime = runtimeRef.current;
     if (!runtime) return undefined;
-    if (paused) runtime.pause();
-    else runtime.resume();
+    if (paused) runtime.pause(); else runtime.resume();
     return () => runtime.pause();
   }, [paused]);
 
   const toWorld = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    return {
-      x: ((e.clientX - rect.left) / rect.width) * WORLD.width,
-      y: ((e.clientY - rect.top) / rect.height) * WORLD.height,
-    };
+    return { x: ((e.clientX - rect.left) / rect.width) * WORLD.width, y: ((e.clientY - rect.top) / rect.height) * WORLD.height };
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="sg-canvas"
-      onMouseMove={(e) => {
-        aimRef.current = toWorld(e);
-      }}
-      onMouseDown={(e) => {
-        aimRef.current = toWorld(e);
-        mouseDownRef.current = true;
-      }}
-      onMouseUp={() => {
-        mouseDownRef.current = false;
-      }}
-      onMouseLeave={() => {
-        mouseDownRef.current = false;
-      }}
+    <canvas ref={canvasRef} className="sg-canvas"
+      onMouseMove={(e) => { aimRef.current = toWorld(e); }}
+      onMouseDown={(e) => { aimRef.current = toWorld(e); mouseDownRef.current = true; }}
+      onMouseUp={() => { mouseDownRef.current = false; }}
+      onMouseLeave={() => { mouseDownRef.current = false; }}
       aria-label="Game area"
     />
   );
