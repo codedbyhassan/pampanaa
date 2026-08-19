@@ -1,20 +1,10 @@
-import { createCampaignState } from '../../domain/campaign/campaignRuntime';
-import { createPlayerProgression } from '../../domain/player/playerProgression';
-
 export function createRuntimeSessionService({ onEvent } = {}) {
   let session = null;
   const emit = (type, payload = {}) => onEvent?.(type, payload);
 
   return Object.freeze({
     start(input = {}) {
-      session = Object.freeze({
-        id: input.id ?? `session_${Date.now()}`,
-        profileId: input.profileId ?? null,
-        missionId: input.missionId ?? null,
-        encounterId: input.encounterId ?? null,
-        startedAt: new Date().toISOString(),
-        status: 'active',
-      });
+      session = Object.freeze({ id: input.id ?? `session_${Date.now()}`, profileId: input.profileId ?? null, missionId: input.missionId ?? null, encounterId: input.encounterId ?? null, startedAt: new Date().toISOString(), status: 'active' });
       emit('SESSION_STARTED', { session });
       return session;
     },
