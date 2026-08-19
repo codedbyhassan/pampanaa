@@ -1,4 +1,5 @@
 import GameEngine from '../canvas/GameEngine';
+import '../canvas/gameEnginePersistence';
 import GameClock from './clock/GameClock';
 import GameInput from './input/GameInput';
 import CanvasGameRenderer from './rendering/CanvasGameRenderer';
@@ -14,11 +15,7 @@ export class GameRuntime {
   constructor({ canvasContext, settings, progress, mode = 'campaign', mission, startWave = 1, resumeSnapshot, getInput, onSync, onEvent, Engine = GameEngine }) {
     this.state = RUNTIME_STATES.IDLE;
     this.clock = new GameClock(); this.input = new GameInput(); this.renderer = new CanvasGameRenderer(canvasContext); this.events = new GameEventBus();
-    this.playerLoadout = createPlayerLoadoutService({
-      initialLoadout: { activeWeaponKey: progress?.selectedWeapon || 'blaster', weaponAmps: progress?.weaponAmps },
-      initialBuffs: progress?.activeBuffs,
-      onEvent: (name, payload) => this.events.emit(name, payload),
-    });
+    this.playerLoadout = createPlayerLoadoutService({ initialLoadout: { activeWeaponKey: progress?.selectedWeapon || 'blaster', weaponAmps: progress?.weaponAmps }, initialBuffs: progress?.activeBuffs, onEvent: (name, payload) => this.events.emit(name, payload) });
     this.threats = createThreatService({ onEvent: (name, payload) => this.events.emit(name, payload) });
     this.sessionRuntime = createRuntimeSessionService({ onEvent: (name, payload) => this.events.emit(name, payload) });
     this.encounters = new EncounterRuntime({ mission, onDomainEvent: (name, payload) => this.events.emit(name, payload) });
@@ -27,7 +24,6 @@ export class GameRuntime {
       onSync: (patch) => this.onSync?.(patch),
       onEvent: (name, payload) => { this.handleSimulationEvent(name, payload); this.encounters.handleSimulationEvent(name, payload); this.onEvent?.(name, payload); },
     }});
-
     const sessionInput = { id: `session_${Date.now()}`, profileId: progress?.profileId || progress?.id, missionId: mission?.id || `mission_${startWave}`, encounterId: `encounter_${startWave}` };
     this.sessionRuntime.start(sessionInput);
     this.encounters.startSession({ profileId: sessionInput.profileId, campaignId: mode || 'campaign', missionId: sessionInput.missionId, chapterId: mission?.chapterId });
@@ -39,24 +35,14 @@ export class GameRuntime {
   handleSimulationEvent(name, payload = {}) {
     if (name === 'weaponChanged') this.playerLoadout.equipWeapon(payload.weapon || this.simulation.currentWeaponKey);
     if (name === 'pickupCollected') this.playerLoadout.applyPickup(payload.type, payload.weaponKey || this.simulation.currentWeaponKey);
-    if (name === 'bossEntered') {
-      const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId);
-      if (boss) this.threats.beginBoss(boss.id);
-    }
-    if (name === 'bossDefeated') {
-      const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId);
-      if (boss) this.threats.defeatBoss(boss);
-      this.sessionRuntime.complete({ outcome: 'boss_defeated', bossId: payload.bossId || boss?.id });
-    }
+    if (name === 'bossEntered') { const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId); if (boss) this.threats.beginBoss(boss.id); }
+    if (name === 'bossDefeated') { const boss = this.threats.getBosses().find((item) => item.name === payload.name || item.id === payload.bossId); if (boss) this.threats.defeatBoss(boss); this.sessionRuntime.complete({ outcome: 'boss_defeated', bossId: payload.bossId || boss?.id }); }
     if (name === 'gameOver') this.sessionRuntime.fail('game_over');
     if (name === 'waveAdvance') this.sessionRuntime.start({ id: this.sessionRuntime.getSession()?.id, missionId: this.mission?.id, encounterId: `encounter_${payload.wave}` });
     this.syncPresentation();
   }
 
-  syncPresentation() {
-    this.onSync?.({ playerLoadout: this.playerLoadout.getLoadout(), playerBuffs: this.playerLoadout.getBuffs(), threatCatalog: this.threats.getThreats(), bossCatalog: this.threats.getBosses(), runtimeSession: this.sessionRuntime.getSession() });
-  }
-
+  syncPresentation() { this.onSync?.({ playerLoadout: this.playerLoadout.getLoadout(), playerBuffs: this.playerLoadout.getBuffs(), threatCatalog: this.threats.getThreats(), bossCatalog: this.threats.getBosses(), runtimeSession: this.sessionRuntime.getSession() }); }
   setContext(context) { this.renderer.setContext(context); }
   setInput(input) { this.input.set(input); }
   resize() { this.simulation.handleResize(); }
