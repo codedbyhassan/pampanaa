@@ -29,18 +29,18 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
   const [fps, setFps] = useState(0);
   const [updates, setUpdates] = useState([]);
   const [notice, setNotice] = useState(null);
+  const [playerLoadout, setPlayerLoadout] = useState(null);
+  const [playerBuffs, setPlayerBuffs] = useState({});
+  const [threatCatalog, setThreatCatalog] = useState([]);
+  const [bossCatalog, setBossCatalog] = useState([]);
+  const [runtimeSession, setRuntimeSession] = useState(null);
   const bestWaveRef = useRef(progress.highestWaveReached);
   const mission = MISSION_CATALOG.find((item) => item.id === missionId) || MISSION_CATALOG[0];
   const scheme = settings.controlScheme === 'auto' ? (typeof window !== 'undefined' && 'ontouchstart' in window ? 'touch' : 'keyboard') : settings.controlScheme;
   const touch = useTouchControls(scheme === 'touch');
 
-  const addUpdate = useCallback((type, title, message) => {
-    setUpdates((current) => appendUpdate(current, { type, title, message }));
-  }, []);
-
-  const showNotice = useCallback((title, message) => {
-    setNotice({ id: `${Date.now()}_${Math.random()}`, title, message, duration: 2400 });
-  }, []);
+  const addUpdate = useCallback((type, title, message) => setUpdates((current) => appendUpdate(current, { type, title, message })), []);
+  const showNotice = useCallback((title, message) => setNotice({ id: `${Date.now()}_${Math.random()}`, title, message, duration: 2400 }), []);
 
   useEffect(() => { resumeAudio(); }, [resumeAudio]);
   useEffect(() => { if (!settings.showFps) return undefined; const id = setInterval(() => setFps(engineRef.current?.fps ?? 0), 500); return () => clearInterval(id); }, [settings.showFps]);
@@ -66,8 +66,21 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
     }
   }, [addUpdate, progress.unlockedSkins, saveProgress, showNotice, tryUnlockAchievement]);
 
-  const handleEvent = useCallback(async (name, payload) => {
+  const handleEvent = useCallback(async (name, payload = {}) => {
     const engine = engineRef.current;
+    if (name === 'PLAYER_LOADOUT_UPDATED') {
+      setPlayerLoadout(payload.loadout ?? null);
+      setPlayerBuffs(payload.buffs ?? {});
+      return;
+    }
+    if (name === 'BOSS_ENTERED') {
+      addUpdate(UPDATE_TYPES.MISSION, payload.boss?.name || 'Major threat', payload.boss?.storyRole || 'A major threat has entered the encounter.');
+      showNotice(payload.boss?.name || 'Major threat', payload.boss?.title || 'A major threat has entered the encounter.');
+    }
+    if (name === 'BOSS_PHASE_CHANGED') {
+      addUpdate(UPDATE_TYPES.MISSION, 'Boss phase changed', `The encounter has entered ${payload.phase}.`);
+      showNotice('Phase changed', `The encounter has entered ${payload.phase}.`);
+    }
     if (name === 'kill') {
       const total = (progress.totalEnemiesDefeated || 0) + 1;
       if (total === 1) unlockById('first_blood');
@@ -94,13 +107,13 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
         await persistGameSnapshot({ ...engine.snapshot(), missionId });
         setHasSave(true);
       }
-      addUpdate(UPDATE_TYPES.MISSION, `Wave ${wave}`, 'The encounter has advanced.');
-      showNotice(`Wave ${wave}`, 'The encounter has advanced.');
+      addUpdate(UPDATE_TYPES.MISSION, `Encounter ${wave}`, 'The encounter has advanced.');
+      showNotice(`Encounter ${wave}`, 'The encounter has advanced.');
     }
     if (name === 'gameOver') {
       setIsBest(payload.wave > (bestWaveRef.current || 0));
       setGameOver(true);
-      addUpdate(UPDATE_TYPES.SYSTEM, 'Run ended', `The mission ended at wave ${payload.wave}.`);
+      addUpdate(UPDATE_TYPES.SYSTEM, 'Run ended', `The mission ended at encounter ${payload.wave}.`);
       const stats = structuredClone(progress.stats);
       stats.totalDeaths += 1; stats.gamesPlayed += 1;
       for (const [type, count] of Object.entries(engine.killsByType)) stats.totalKillsByType[type] = (stats.totalKillsByType[type] || 0) + count;
@@ -110,19 +123,42 @@ export function GameContainer({ mode, missionId = 'mission_1', startWave = 1, re
     }
   }, [addUpdate, missionId, progress, saveProgress, settings.autoSave, settings.difficultyLevel, setHasSave, showNotice, unlockById]);
 
+  const handleSync = useCallback((patch) => {
+    syncFromEngine(patch);
+    if (patch.playerLoadout) setPlayerLoadout(patch.playerLoadout);
+    if (patch.playerBuffs) setPlayerBuffs(patch.playerBuffs);
+    if (patch.threatCatalog) setThreatCatalog(patch.threatCatalog);
+    if (patch.bossCatalog) setBossCatalog(patch.bossCatalog);
+    if (patch.runtimeSession) setRuntimeSession(patch.runtimeSession);
+  }, [syncFromEngine]);
+
   const togglePause = useCallback(() => { if (!gameOver) setPaused((p) => !p); }, [gameOver]);
   const openSaveSlots = () => { const engine = engineRef.current; if (!engine || engine.boss) return; setSaveSnapshot({ ...engine.snapshot(), missionId }); };
   const commitSave = async () => { if (saveSnapshot) await persistGameSnapshot(saveSnapshot); setSaveSnapshot(null); setHasSave(true); onQuit(); };
-  const restart = () => { setGameOver(false); setPaused(false); setUpdates([]); setNotice(null); syncFromEngine({ status: 'playing' }); setRunKey((k) => k + 1); };
+  const restart = () => { setGameOver(false); setPaused(false); setUpdates([]); setNotice(null); setPlayerLoadout(null); setPlayerBuffs({}); setThreatCatalog([]); setBossCatalog([]); setRuntimeSession(null); syncFromEngine({ status: 'playing' }); setRunKey((k) => k + 1); };
 
   return (
     <div className="sg-game">
-      <GameCanvas key={runKey} mode={mode} startWave={startWave} resumeSnapshot={runKey === 0 ? resumeSnapshot : null} paused={paused || gameOver} scheme={scheme} touch={touch} engineRef={engineRef} onEngineEvent={handleEvent} onTogglePause={togglePause} />
+      <GameCanvas key={runKey} mode={mode} mission={mission} startWave={startWave} resumeSnapshot={runKey === 0 ? resumeSnapshot : null} paused={paused || gameOver} scheme={scheme} touch={touch} engineRef={engineRef} onEngineEvent={handleEvent} onTogglePause={togglePause} />
       <GameHUD hud={hud} mode={mode} mission={mission} fps={settings.showFps ? fps : null} />
       <RuntimeNotice notice={notice} onClear={() => setNotice(null)} />
       {scheme === 'touch' && <div className="sg-overlay" style={{ pointerEvents: 'none' }}><TouchControls onMove={touch.setMove} onFire={touch.setFiring} /></div>}
-      {paused && !gameOver && !pauseSettingsOpen && !saveSnapshot && <PauseMenu updates={updates} onResume={() => setPaused(false)} onSaveQuit={openSaveSlots} onQuit={onQuit} onSettings={() => setPauseSettingsOpen(true)} saveDisabled={!!engineRef.current?.boss} />}
-      {saveSnapshot && <SaveSlotDialog snapshot={saveSnapshot} defaultName={`${mission.title} · Wave ${saveSnapshot.wave || 1}`} onSaved={commitSave} onCancel={() => setSaveSnapshot(null)} />}
+      {paused && !gameOver && !pauseSettingsOpen && !saveSnapshot && (
+        <PauseMenu
+          updates={updates}
+          playerLoadout={playerLoadout}
+          playerBuffs={playerBuffs}
+          threatCatalog={threatCatalog}
+          bossCatalog={bossCatalog}
+          runtimeSession={runtimeSession}
+          onResume={() => setPaused(false)}
+          onSaveQuit={openSaveSlots}
+          onQuit={onQuit}
+          onSettings={() => setPauseSettingsOpen(true)}
+          saveDisabled={!!engineRef.current?.boss}
+        />
+      )}
+      {saveSnapshot && <SaveSlotDialog snapshot={saveSnapshot} defaultName={`${mission.title} · Encounter ${saveSnapshot.wave || 1}`} onSaved={commitSave} onCancel={() => setSaveSnapshot(null)} />}
       {pauseSettingsOpen && <div className="sg-modal"><div className="sg-modal__inner sg-modal__inner--wide"><Settings onBack={() => setPauseSettingsOpen(false)} isModal backLabel="Back to pause" /></div></div>}
       {gameOver && <GameOverScreen score={hud.score} wave={hud.wave} isBest={isBest} onSubmit={(name) => submitScore({ name, score: hud.score, wave: hud.wave, mode })} onRestart={restart} onQuit={onQuit} />}
     </div>
