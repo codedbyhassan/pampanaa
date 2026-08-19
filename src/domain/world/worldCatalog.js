@@ -4,7 +4,7 @@ export const FACTION_CATALOG = Object.freeze([
   createFaction({ id: FACTIONS.HAVEN, name: 'The Haven', alignment: 'human', description: 'The surviving settlement of Pampanaa.' }),
   createFaction({ id: FACTIONS.WANDERERS, name: 'The Wanderers', alignment: 'unknown', description: 'Survivors moving between the dead zones.' }),
   createFaction({ id: FACTIONS.VEILED, name: 'The Veiled', alignment: 'hostile', description: 'The hostile presence emerging around the returning signal.' }),
-  createFaction({ id: FACTIONS.ARCHITECTS, name: 'The Architects', alignment: 'unknown', description: 'An ancient intelligence connected to the world's lost network.' }),
+  createFaction({ id: FACTIONS.ARCHITECTS, name: 'The Architects', alignment: 'unknown', description: "An ancient intelligence connected to the world's lost network." }),
 ]);
 
 export const REGION_CATALOG = Object.freeze([
