@@ -1,25 +1,30 @@
-export const WEAPON_KEYS = Object.freeze({ BLASTER: 'blaster', PULSE: 'pulse', ARC: 'arc' });
+export const WEAPON_KEYS = Object.freeze({ BLASTER: 'blaster', SHOTGUN: 'shotgun', LASER: 'laser', HOMING_MISSILE: 'homingMissile', FLAMETHROWER: 'flamethrower', TESLA_ARC: 'teslaArc', CRYO_LANCE: 'cryoLance' });
 export const AMP_KEYS = Object.freeze({ DAMAGE: 'damage', FIRE: 'fire', PIERCE: 'pierce', MULTISHOT: 'multishot' });
 export const BUFF_KEYS = Object.freeze({ SHIELD: 'shield', RAPID_FIRE: 'rapidFire', SCORE_MULTIPLIER: 'scoreMultiplier', AUTO_LOCK: 'autoLock', MULTISHOT: 'multishot', MAGNET: 'magnet' });
-export const PICKUP_KEYS = Object.freeze({ REPAIR: 'repair', SHIELD: 'shield', RAPID_FIRE: 'rapidFire', SCORE_MULTIPLIER: 'scoreMultiplier', AUTO_LOCK: 'autoLock', MAGNET: 'magnet', DAMAGE_AMP: 'damageAmp', FIRE_AMP: 'fireAmp', PIERCE_AMP: 'pierceAmp', MULTISHOT_AMP: 'multishotAmp' });
+export const PICKUP_KEYS = Object.freeze({ REPAIR: 'health', SHIELD: 'shield', RAPID_FIRE: 'rapidFire', SCORE_MULTIPLIER: 'scoreMultiplier', AUTO_LOCK: 'autoLock', MULTISHOT: 'multishot', MAGNET: 'magnet', DAMAGE_AMP: 'damageAmp', FIRE_AMP: 'fireAmp', PIERCE_AMP: 'pierceAmp', MULTISHOT_AMP: 'multishotAmp' });
 
 export const WEAPON_CATALOG = Object.freeze({
-  [WEAPON_KEYS.BLASTER]: Object.freeze({ id: WEAPON_KEYS.BLASTER, name: 'Blaster', family: 'kinetic', cadence: 'balanced', description: 'The Warden standard weapon.' }),
-  [WEAPON_KEYS.PULSE]: Object.freeze({ id: WEAPON_KEYS.PULSE, name: 'Pulse', family: 'energy', cadence: 'rapid', description: 'A fast energy weapon built for sustained pressure.' }),
-  [WEAPON_KEYS.ARC]: Object.freeze({ id: WEAPON_KEYS.ARC, name: 'Arc', family: 'energy', cadence: 'heavy', description: 'A heavier discharge with deliberate timing.' }),
+  [WEAPON_KEYS.BLASTER]: Object.freeze({ id: 'blaster', name: 'Blaster', family: 'kinetic', cadence: 'balanced' }),
+  [WEAPON_KEYS.SHOTGUN]: Object.freeze({ id: 'shotgun', name: 'Shotgun', family: 'kinetic', cadence: 'burst' }),
+  [WEAPON_KEYS.LASER]: Object.freeze({ id: 'laser', name: 'Laser', family: 'photon', cadence: 'rapid' }),
+  [WEAPON_KEYS.HOMING_MISSILE]: Object.freeze({ id: 'homingMissile', name: 'Homing Missile', family: 'explosive', cadence: 'heavy' }),
+  [WEAPON_KEYS.FLAMETHROWER]: Object.freeze({ id: 'flamethrower', name: 'Flamethrower', family: 'fire', cadence: 'continuous' }),
+  [WEAPON_KEYS.TESLA_ARC]: Object.freeze({ id: 'teslaArc', name: 'Tesla Arc', family: 'electric', cadence: 'chain' }),
+  [WEAPON_KEYS.CRYO_LANCE]: Object.freeze({ id: 'cryoLance', name: 'Cryo Lance', family: 'ice', cadence: 'burst' }),
 });
 
 export const PICKUP_CATALOG = Object.freeze({
-  [PICKUP_KEYS.REPAIR]: Object.freeze({ id: PICKUP_KEYS.REPAIR, name: 'Repair', category: 'recovery', duration: 0 }),
-  [PICKUP_KEYS.SHIELD]: Object.freeze({ id: PICKUP_KEYS.SHIELD, name: 'Shield', category: 'defense', duration: 8 }),
-  [PICKUP_KEYS.RAPID_FIRE]: Object.freeze({ id: PICKUP_KEYS.RAPID_FIRE, name: 'Rapid Fire', category: 'temporary', duration: 8 }),
-  [PICKUP_KEYS.SCORE_MULTIPLIER]: Object.freeze({ id: PICKUP_KEYS.SCORE_MULTIPLIER, name: 'Score Multiplier', category: 'temporary', duration: 10 }),
-  [PICKUP_KEYS.AUTO_LOCK]: Object.freeze({ id: PICKUP_KEYS.AUTO_LOCK, name: 'Auto-Lock', category: 'tactical', duration: 10 }),
-  [PICKUP_KEYS.MAGNET]: Object.freeze({ id: PICKUP_KEYS.MAGNET, name: 'Magnet', category: 'tactical', duration: 10 }),
-  [PICKUP_KEYS.DAMAGE_AMP]: Object.freeze({ id: PICKUP_KEYS.DAMAGE_AMP, name: 'Damage Amp', category: 'weapon', amp: AMP_KEYS.DAMAGE, duration: 0 }),
-  [PICKUP_KEYS.FIRE_AMP]: Object.freeze({ id: PICKUP_KEYS.FIRE_AMP, name: 'Fire Amp', category: 'weapon', amp: AMP_KEYS.FIRE, duration: 0 }),
-  [PICKUP_KEYS.PIERCE_AMP]: Object.freeze({ id: PICKUP_KEYS.PIERCE_AMP, name: 'Pierce Amp', category: 'weapon', amp: AMP_KEYS.PIERCE, duration: 0 }),
-  [PICKUP_KEYS.MULTISHOT_AMP]: Object.freeze({ id: PICKUP_KEYS.MULTISHOT_AMP, name: 'Multishot Amp', category: 'weapon', amp: AMP_KEYS.MULTISHOT, duration: 0 }),
+  [PICKUP_KEYS.REPAIR]: Object.freeze({ id: 'health', name: 'Repair', category: 'recovery', duration: 0 }),
+  [PICKUP_KEYS.SHIELD]: Object.freeze({ id: 'shield', name: 'Shield', category: 'defense', duration: 5 }),
+  [PICKUP_KEYS.RAPID_FIRE]: Object.freeze({ id: 'rapidFire', name: 'Rapid Fire', category: 'temporary', duration: 7 }),
+  [PICKUP_KEYS.SCORE_MULTIPLIER]: Object.freeze({ id: 'scoreMultiplier', name: 'Double Score', category: 'temporary', duration: 9 }),
+  [PICKUP_KEYS.AUTO_LOCK]: Object.freeze({ id: 'autoLock', name: 'Auto-Lock', category: 'tactical', duration: 12 }),
+  [PICKUP_KEYS.MULTISHOT]: Object.freeze({ id: 'multishot', name: 'Multi-Shot', category: 'temporary', duration: 10 }),
+  [PICKUP_KEYS.MAGNET]: Object.freeze({ id: 'magnet', name: 'Magnet', category: 'tactical', duration: 12 }),
+  [PICKUP_KEYS.DAMAGE_AMP]: Object.freeze({ id: 'damageAmp', name: 'Damage Amplifier', category: 'weapon', amp: AMP_KEYS.DAMAGE, duration: 0 }),
+  [PICKUP_KEYS.FIRE_AMP]: Object.freeze({ id: 'fireAmp', name: 'Cadence Amplifier', category: 'weapon', amp: AMP_KEYS.FIRE, duration: 0 }),
+  [PICKUP_KEYS.PIERCE_AMP]: Object.freeze({ id: 'pierceAmp', name: 'Piercing Rounds', category: 'weapon', amp: AMP_KEYS.PIERCE, duration: 0 }),
+  [PICKUP_KEYS.MULTISHOT_AMP]: Object.freeze({ id: 'multishotAmp', name: 'Barrel Multiplier', category: 'weapon', amp: AMP_KEYS.MULTISHOT, duration: 0 }),
 });
 
 export function createPlayerLoadout(input = {}) {
